@@ -1,4 +1,12 @@
-# My Expectations
+# Table of Content
+
+[My Expectations](#myexpections)
+[Career Target](#careertarget)
+
+
+
+
+# My Expectations <a name="myexpections"></a>
 A collection of documents and maybe codes to describe my IT skill set and knowledge structure...
 
 This is a planned and designed skill and knowledge sets structure for me or someone else if any in order to proficiently take any designated IT jobs and deal with any type of interviews for those jobs.
@@ -12,7 +20,7 @@ Probably the final goal for me by this set is to compile a set of technical docu
 **Notes**:
 I rate my skill using 5 stars scale. 5 stars (*****) is the expert level, which is the target for each technical skill. My goal is to have those major skills rated at 5 stars eventually.  
 
-# Career Target
+# Career Target <a name="careertarget"></a>
 - DevOps
 - Linux admin
 - Automation
