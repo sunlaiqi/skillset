@@ -50,7 +50,7 @@ I rate my skill using 5 stars scale. 5 stars (*****) is the expert level, which 
 # [Core Skills](Core/)
 
 - Programming Languages
-    - **Python** - Expert Level ****
+    - **[Python](Core/Python/)** - ****
     - **Bash** - Expert Level ****
     - C - Advanced Level *
     - **Javascript** - Advanced Level ***
