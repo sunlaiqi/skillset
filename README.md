@@ -2,6 +2,10 @@
 
 - [My Expectations](#myexpections)
 - [Career Target](#careertarget)
+- [Goals](#goals)
+- [Platform](#platform)
+- [Core Skills](#core)
+- [Supportive Skills](#support)
 
 
 
@@ -27,7 +31,7 @@ I rate my skill using 5 stars scale. 5 stars (*****) is the expert level, which 
 - Automation
 - Fullstack 
 
-
+<a name="goals"></a>
 # Goals
 - A solid skill and knowledge structure
 - Very clear and focused career direction
@@ -35,13 +39,15 @@ I rate my skill using 5 stars scale. 5 stars (*****) is the expert level, which 
 - A solid picture shown to employer
 - **Compile a book for each skill**
 
+<a name="platform"></a>
 # Platform
 - **Linux**
     - Linux Admin ***
     - Performance Tuning **
     - BPF Performance Tools *
 
-# Core Skills
+<a name="core"></a>
+# [Core Skills](Core/)
 
 - Programming Languages
     - **Python** - Expert Level ****
@@ -56,6 +62,7 @@ I rate my skill using 5 stars scale. 5 stars (*****) is the expert level, which 
     - **Vue.js** - Expert Level ***
     - React.js - Advanced Level *
 
+<a name="support"></a>
 # Supportive Skills
 
 - **Container** 
