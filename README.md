@@ -9,6 +9,9 @@ In pursuing the following career goals, this structure will be the guide for me 
 
 Probably the final goal for me by this set is to compile a set of technical documents that summarize some technical knowledges or tricks for each technical topics, e.g. Python, Bash, Javascript, C or some interesting stuff. This way, whenever I need to refresh my memory or lookup something, I won't waste my time to look for them somewhere or googling or reading books or docs again and again. Based on my experience, 80% of time were wasted to read those technical documents, especially you just need to refresh your memory. Hopefully, I figure out a efficient or a better way on how to accumulate my knowledge and skills by compiling some documents. At least, I have highly expetaction that this will save a lot of time for myself.
 
+**Notes**:
+I rate my skill using 5 stars scale. 5 stars (*****) is the expert level, which is the target for each technical skill. My goal is to have those major skills rated at 5 stars eventually.  
+
 # Career Target
 - DevOps
 - Linux admin
@@ -24,28 +27,29 @@ Probably the final goal for me by this set is to compile a set of technical docu
 - **Compile a book for each skill**
 
 # Platform
-- Linux
+- **Linux**
+    - Linux Admin ***
+    - Performance Tuning **
+    - BPF Performance Tools *
 
 # Core Skills
 
 - Programming Languages
-    - Python - Expert Level ****
-    - Bash - Expert Level ****
+    - **Python** - Expert Level ****
+    - **Bash** - Expert Level ****
     - C - Advanced Level *
-    - Javascript - Advanced Level ***
+    - **Javascript** - Advanced Level ***
 - Backend
-    - Django - Expert Level ***
+    - **Django** - Expert Level ***
     - Flask - Advanced Level *
     - Fastapi - Advanced Level *
 - Frontend
-    - Vue.js - Expert Level ***
+    - **Vue.js** - Expert Level ***
     - React.js - Advanced Level *
 
 # Supportive Skills
-- Linix Admin ****
-    - Performance Tuning *
-    - BPF 
-- Container 
+
+- **Container** 
     - Docker/k8s/rancher - Hands-on **
 - Distributed Storage
     - AFS - hands-on **
