@@ -67,6 +67,8 @@ I rate my skill using 5 stars scale. 5 stars (*****) is the expert level, which 
 
 - **Container** 
     - Docker/k8s/rancher - Hands-on **
+- Cloud
+    - AWS
 - Distributed Storage
     - AFS - hands-on **
     - ZFS ***
