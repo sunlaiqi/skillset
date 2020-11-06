@@ -24,7 +24,7 @@ This is the summary of Linux Performance Monitoring and Tuning
 •  Methodologies can provide guidance for choosing and using tools effectively
 •  As tarting point,aprocess,and an ending point
 
-### Anti-Methodologies {#Anti-Methodologies}
+### Anti-Methodologies  {#Anti-Methodologies}
 
 •  The lack of a deliberate methodology...
 
@@ -44,7 +44,7 @@ This is the summary of Linux Performance Monitoring and Tuning
 4.  When proven wrong, go to 1
 
 
-### Actual Methodologies {#ActualMethodologies}
+### Actual Methodologies    {#ActualMethodologies}
 •  Problem Statement Method
 •  Workload Characterization Method
 •  USE Method
@@ -151,7 +151,7 @@ Benchmarking    | Load test. Caution: production tests can cause issues due to c
 Tuning  | Change. Danger: changes could hurt performance, now or later with load.
 Static  | Check configuration. Should be safe.
 
-#### Observability Tools {#Observability}
+#### Observability Tools    {#Observability}
 
 ![Observability Tools](Images/ObservabilityTools.png)
 
@@ -160,7 +160,7 @@ Static  | Check configuration. Should be safe.
 ![Anatomy of Linux](Images/Linux.png)
 
 
-##### Observability Tools: Basic {#ObservabilityBasic}
+##### Observability Tools: Basic    {#ObservabilityBasic}
 •  uptime
 •  top(orhtop) •  ps
 •  vmstat
@@ -213,7 +213,7 @@ Static  | Check configuration. Should be safe.
 - cached: virtual page cache
 
 
-##### Observability Tools: Intermediate {#ObservabilityIntermediate}
+##### Observability Tools: Intermediate     {#ObservabilityIntermediate}
 •  strace
 •  tcpdump
 •  netstat
@@ -277,7 +277,7 @@ Static  | Check configuration. Should be safe.
 
 
 
-##### Advanced Observability Tools {#ObservabilityAdvanced}
+##### Advanced Observability Tools  {#ObservabilityAdvanced}
 - Misc:
     - ltrace, ss, iptraf, ethtool, snmpget, lldptool, iotop, blktrace, slabtop, /proc, pcstat
 - CPU Performance Counters:
@@ -351,7 +351,7 @@ dtrace4linux, sysdig
     - Dynamic: instrument any software (kprobes, uprobes). Custom metrics on-demand. Catch all.
 - Many are in-development
 
-#### Benchmarking Tools {#Benchmarking}
+#### Benchmarking Tools     {#Benchmarking}
 
 ![Benchmarking Tools](Images/BenchmarkingTools.png)
 
