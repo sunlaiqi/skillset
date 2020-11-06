@@ -14,11 +14,14 @@ This is the summary of Linux Performance Monitoring and Tuning
 - [Static Tools](#Static)
 
 [Profiling](#Profiling)
+
 [Tracing](#Tracing)
 - [Linux Event Sources](#Sources)
 - [eBPF](#BPF)
 
-## Methodologies {#Methodologies}
+
+
+## Methodologies    {#Methodologies}
 •  There are dozens of performance tools for Linux –  Packages: sysstat, procps, coreutils, ...
 –  Commercial products
 •  Methodologies can provide guidance for choosing and using tools effectively
