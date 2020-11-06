@@ -52,12 +52,14 @@ I rate my skill using 5 stars scale. 5 stars (*****) is the expert level, which 
 - Programming Languages
     - **[Python](Core/Python/)** - ****
     - **Bash** - Expert Level ****
-    - C - Advanced Level *
+    - C - Advanced Level **
     - **Javascript** - Advanced Level ***
+    - go *
 - Backend
     - **Django** - Expert Level ***
     - Flask - Advanced Level *
     - Fastapi - Advanced Level *
+    - REST API ***
 - Frontend
     - **Vue.js** - Expert Level ***
     - React.js - Advanced Level *
