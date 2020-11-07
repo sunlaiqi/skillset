@@ -450,3 +450,29 @@ Some example targets of micro-benchmarks, including a second dimension for the t
 
 Micro-benchmarking typically conducts the target operation as quickly as possible and measures the time for a large number of these operations to complete. The average time can then be calculated 
 `(average time = runtime/operation count)`.
+
+## Modeling
+
+
+Analytical modeling of a system can be used for various purposes, in particular scalability analysis: studying how performance scales as load or resources scale. Resources may be hardware, such as CPU cores, or software, such as processes or threads.
+
+Analytical modeling can be considered as the third type of performance evaluation activity, along with observability of a production system (“measurement”) and experimental testing (“simulation”). Performance is best understood when at least two of these activities are performed: analytical modeling and simulation, or simulation and measurement.
+
+Analytical modeling can be used to predict performance and can be based on the results of measurement or simulation.
+
+The Scalability Patterns:
+
+- Linear scalability: Performance increases proportionally as the resource is scaled. This may not continue forever and may instead be the early stages of another scalability pattern.
+- Contention: Some components of the architecture are shared and can be used only serially, and contention for these shared resources begins to reduce the effectiveness of scaling.
+- Coherence: The tax to maintain data coherency including propagation of changes begins to outweigh the benefits of scaling.
+- Knee point: A factor is encountered at a scalability point that changes the scalability profile.
+- Scalability ceiling: A hard limit is reached. This may be a device bottleneck, such as a bus or interconnect reaching maximum throughput, or a software-imposed limit (system resource control).
+
+
+## Capacity Planning
+
+Capacity planning examines how well the system will handle load, and how it will scale as load scales. It can be performed in a number of ways, including studying resource limits and factor analysis.
+
+## Statistics
+
+
