@@ -7,13 +7,21 @@ Methodologies can help the performance analyst approach complex systems by showi
 ## Terminology
 
 **IOPS**: Input/output operations per second is a measure of the rate of data transfer operations. For disk I/O, IOPS refers to reads and writes per second.
+
 **Throughput**: the rate of work performed. Especially in communications, the term is used to refer to the data rate (bytes per second or bits per second). In some contexts (e.g., databases), throughput can refer to the operation rate (operations per second or transactions per second).
+
 **Response time**: the time for an operation to complete. This includes any time spent waiting and time spent being serviced (service time), including the time to transfer the result.
+
 **Latency**: Latency is a measure of time an operation spends waiting to be serviced. In some contexts, it can refer to the entire time for an operation, equivalent to response time.
+
 **Utilization**: For resources that service requests, utilization is a measure of how busy a resource is, based on how much time in a given interval it was actively performing work. For resources that provide storage, utilization may refer to the capacity that is consumed (e.g., memory utilization).
+
 **Saturation**: the degree to which a resource has queued work it cannot service.
+
 **Bottleneck**: In system performance, a bottleneck is a resource that limits the performance of the system. Identifying and removing systemic bottlenecks is a key activity of systems performance.
+
 **Workload**: The input to the system or the load applied is the workload. For a database, the workload consists of the database queries and commands sent by the clients.
+
 **Cache**: a fast storage area that can duplicate or buffer a limited amount of data, to avoid communicating directly with a slower tier of storage, thereby improving performance. For economic reasons, a cache is smaller than the slower tier.
 
 ## Concepts
@@ -100,7 +108,8 @@ Performance metrics are not free; at some point, CPU cycles must be spent to gat
 ### Utilization
 
 
-Time-Based
+**Time-Based**
+
 Time-based utilization is formally defined in queueing theory.
 For example: the average amount of time the server or resource was busy
 along with the ratio 
@@ -112,7 +121,7 @@ This utilization metric tells us how busy a component is: when a component appro
 Some components can service multiple operations in parallel. 
 A disk that is 100% busy may also be able to accept and process more work, for example, by buffering writes in the on-disk cache to be completed later. Storage arrays frequently run at 100% utilization because some disk is busy 100% of the time, but the array has plenty of idle disks and can accept much more work.
 
-Capacity-Based
+**Capacity-Based**
 
 This defines utilization in terms of capacity instead of time. It implies that a disk at 100% utilization cannot accept any more work. With the time-based definition, 100% utilization only means it is busy 100% of the time.
 100% busy does not mean 100% capacity.
@@ -145,19 +154,22 @@ runtime = (hit rate x hit latency) + (miss rate x miss latency)
 ```
 This calculation uses the average hit and miss latencies and assumes the work is serialized.
 
-Algorithms
+**Algorithms**
 
 Most recently used (MRU) refers to a cache retention policy.
+
 Least recently used (LRU) can refer to an equivalent cache eviction policy.
+
 There are also most frequently used (MFU) and least frequently used (LFU) policies.
 You may encounter not frequently used (NFU), which may be an inexpensive but less thorough version of LRU.
 
 **Hot, Cold, and Warm Caches**
+
 These words are commonly used to describe the state of the cache:
-**Cold**: A cold cache is empty, or populated with unwanted data. The hit ratio for a cold cache is zero (or near zero as it begins to warm up).
-**Hot**: A hot cache is populated with commonly requested data and has a high hit ratio, for example, over 99%.
-**Warm**: A warm cache is one that is populated with useful data but doesn’t have a high enough hit ratio to be considered hot.
-**Warmth**: Cache warmth describes how hot or cold a cache is. An activity that improves cache warmth is one that aims to improve the cache hit ratio.
+- **Cold**: A cold cache is empty, or populated with unwanted data. The hit ratio for a cold cache is zero (or near zero as it begins to warm up).
+- **Hot**: A hot cache is populated with commonly requested data and has a high hit ratio, for example, over 99%.
+- **Warm**: A warm cache is one that is populated with useful data but doesn’t have a high enough hit ratio to be considered hot.
+- **Warmth**: Cache warmth describes how hot or cold a cache is. An activity that improves cache warmth is one that aims to improve the cache hit ratio.
 
 ## Perspectives
 
