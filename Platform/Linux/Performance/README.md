@@ -37,10 +37,10 @@ This is the summary of Linux Performance Monitoring and Tuning
 2.  Run tools
 3.  Look for obvious issues
 
-#### Drunk Man An<-Method
+#### Drunk Man Anti-Method
 •  Tune things at random until the problem goes away
 
-#### Blame Someone Else An<-Method
+#### Blame Someone Else Anti-Method
 1.  Find a system or environment component you are not responsible for
 2.  Hypothesize that the issue is with that component
 3.  Redirect the issue to the responsible team
