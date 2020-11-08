@@ -169,4 +169,158 @@ Here is an expanded list, this time using six thread states (and a different nam
 
 These have been selected as a minimal and useful set; you may wish to add more states to your list. For example, the executing state may be split into user- and kernel-mode execution, and the sleeping state can be divided based on the target. 
 
+Once you’ve established in which of the first five states the threads are spending their time, you can investigate them further:
+- **Executing**: Check whether this is user- or kernel-mode time and the reason for CPU consumption by using profiling. Profiling can determine which code paths are consuming CPU and for how long, which can include time spent spinning on locks. 
 
+- **Runnable**: Spending time in this state means the application needs more CPU resources. 
+
+- **Anonymous paging**: A lack of available main memory for the application can cause anonymous paging and delays. 
+
+- **Sleeping**: Analyze the resource on which the application is blocked. 
+
+- **Lock**: Identify the lock, the thread holding it, and the reason why the holder held it for so long. The reason may be that the holder was blocked on another lock, which requires further unwinding. 
+
+When you see large sleeping and lock state times, remember to drill down a little to check if this is really idle time.
+
+**Linux**
+
+The time spent **executing** is not hard to determine: top(1) reports this as %CPU. 
+
+**Runnabl**e is tracked by the kernel `schedstats` feature and is exposed via `/proc/*/schedstat`. The `perf sched` tool can also provide metrics for understanding time spent runnable and waiting.
+
+Time waiting for **anonymous paging** (in Linux, swapping) can be measured by the *kernel delay accounting* feature, provided it is enabled. It provides separate states for swapping and for time blocked during memory reclaim (also related to memory pressure). There isn’t a commonly used tool to expose these states; however, the kernel documentation contains an example program to do this: `getdelays.c`. Another approach is to use tracing tools such as `DTrace` or `SystemTap`.
+
+Time blocked in the **sleeping** state can be loosely estimated using other tools, for example, `pidstat -d` to determine if a process is performing disk I/O, and probably sleeping. Delay and other I/O accounting features, if they are enabled, do provide time blocked on block I/O, which can also be observed using `iotop(1)`. Other reasons for blocking can be investigated using tracing tools such as `DTrace` or `SystemTap`. The application may also have instrumentation, or instrumentation can be added, to track time performing explicit I/O (disk and network).
+
+If the application is stuck in the sleeping state for very long intervals (seconds), you can try `pstack(1)` to determine why. This takes a single snapshot of the threads and their user stack traces, which should include the sleeping threads and the reason they are sleeping. Be warned, however: `pstack(1`) may briefly pause the target while it does this, so use with caution.
+
+**S** can be investigated using tracing tools.
+
+### CPU Profiling
+
+Use `Dtrace` or `perf(1)` for CPU profiling.
+
+The intent is to determine why an application is consuming CPU resources. An effective technique is to sample the on-CPU user-level stack trace and coalesce the results. The stack traces shows the code path taken, which can reveal both high- and low-level reasons for the application consuming CPU.
+
+Sampling stack traces can generate many thousands of lines of output to examine, even when summarizing the output to print only unique stacks. One way to understand the profile quickly is to visualize it using flame graphs.
+
+Apart from sampling the stack trace, the currently running function alone can be sampled. In some cases this is sufficient to identify why the application is using the CPU and produces much less output, making it quicker to read and understand. 
+
+It can also be useful to study the caller of the currently running function, which some profiling software (including DTrace) can easily do.
+
+### Syscall Analysis
+
+It can be useful, and sometimes more practical, to study these based on system call execution:
+
+- **Executing**: on-CPU (user mode)
+- **Syscalls**: time during a system call (kernel mode running or waiting)
+
+The syscall time includes I/O, locks, and other syscall types.
+
+The intent is to find out where syscall time is spent, including the type of syscall and the reason it is called.
+
+**Breakpoint Tracing**
+
+The traditional style of syscall tracing involves setting breakpoints for syscall entry and return. These are invasive, and for applications with high syscall rates their performance may be worsened by an order of magnitude.
+
+**strace**
+
+On Linux, this is performed using the strace(1) command. For example:
+```
+$ strace -ttt -T -p 1884
+```
+The options used were (see the man page for all)
+- **-ttt**: prints the first column of time-since-epoch, in units of seconds with microsecond resolution.
+- **-T**: prints the last field (<time>), which is the duration of the system call, in units of seconds with microsecond resolution.
+- **-p PID**: trace this process ID. A command can also be specified so that strace(1) launches and traces it.
+
+This form of strace(1) prints a line of output per syscall. The -c option can be used to summarize system call activity:
+```
+$ strace -c -p 1884
+```
+
+The output includes
+
+- time: percentage showing where system CPU time was spent 
+- seconds: total system CPU time, in seconds
+- usecs/call: average system CPU time per call, in microseconds 
+- calls: number of system calls during strace(1)
+- syscall: system call name
+
+Following example shows how `strace ` samples output `dd` command.
+```bash
+$ strace -c dd if=/dev/zero of=/dev/null bs=1k count=5000k
+```
+
+**Buffered Tracing**
+
+With buffered tracing, instrumentation data can be buffered in-kernel while the target program continues to execute. This differs from breakpoint tracing, which interrupts the target program for each tracepoint.
+
+DTrace provides both buffered tracing and aggregations to reduce tracing overhead and allows custom programs to be written for syscall analysis. 
+
+### I/O Profiling
+
+This can be done using DTrace, examining the user-level stack traces for system calls.
+
+For example, this one-liner traces PostgreSQL read() syscalls, gathers the user-level stack trace, and aggregates them:
+```bash
+# dtrace -n 'syscall::read:entry /execname == "postgres"/ { @[ustack()] = count(); }'
+```
+
+### Workload Characterization
+
+The application applies work to system resources—CPUs, memory, file system, disk, and network— as well as to the operating system via system calls. All of these can be studied using the workload characterization methodology. 
+In addition, the workload sent to the application can be studied. 
+
+### USE Method
+
+If you can find a functional diagram showing the internal components of an application, consider the utilization, saturation, and error metrics for each software resource and see what makes sense.
+
+For example, the application may use a pool of worker threads to process requests, with a queue for requests waiting their turn. Treating this as a resource, the three metrics could then be defined in this way:
+- **Utilization**: average number of threads busy processing requests during an interval, as a percentage of the total threads. For example, 50% would mean that, on average, half the threads were busy working on requests.
+- **Saturation**: average length of the request queue during an interval. This shows how many requests have backed up waiting for a worker thread.
+- **Errors**: requests denied or failed for any reason.
+
+Your task is then to find how these metrics can be measured.
+
+For a different example, consider file descriptors. The system may impose a limit, such that these are a finite resource. The three metrics could be as follows:
+- **Utilization**: number of in-use file descriptors, as a percentage of the limit.
+- **Saturation**: depends on the OS behavior: if threads block waiting for file descriptor allocation, this can be the number of blocked threads waiting for this resource.
+- **Errors**: allocation error, such as EFILE, “Too many open files.”
+
+### Drill-Down Analysis
+
+For applications, drill-down analysis can begin with examining the operations the application serves and then drilling down into application internals to see how it is performing them. For I/O, this drill- down analysis can enter system libraries, syscalls, and the kernel.
+
+There are also specific tools for investigating library calls: ltrace(1) on Linux.
+
+### Lock Analysis
+
+For multithreaded applications, locks can become a bottleneck, inhibiting parallelism and scalability. They can be analyzed by
+- Checking for contention
+- Checking for excessive hold times
+
+The first identifies whether there is a problem now. Excessive hold times are not necessarily a problem, but they may be in the future, with more parallel load. For each, try to identify the name of the lock (if it exists) and the code path that led to using it.
+
+While there are special-purpose tools for lock analysis, you can sometimes solve issues from CPU profiling alone. For spin locks, contention shows up as CPU usage and can easily be identified using CPU profiling of stack traces. For adaptive mutex locks, contention often involves some spinning, which can also be identified by CPU profiling of stack traces. In that case, be aware that the CPU profile gives only a part of the story, as threads may have blocked and slept while waiting for the locks. 
+
+Tracing of kernel- or user-level locks does add overhead. These particular tools are based on DTrace, which minimizes this overhead as much as possible. Alternatively, as described earlier, CPU profiling at a fixed rate (e.g., 97 Hz) will identify many (but not all) lock issues, without the perevent tracing overhead.
+
+### Static Performance Tuning
+
+Static performance tuning focuses on issues of the configured environment. For application performance, examine the following aspects of the static configuration:
+- What version of the application is running? Are there newer versions? Do their release notes mention performance improvements?
+- What known performance issues are there with the application? Is there a bug database that can be searched?
+- How is the application configured?
+- If it was configured or tuned differently from the defaults, what was the reason? (Was it based on measurements and analysis, or guesswork?)
+- Does the application employ a cache of objects? How is it sized?
+- Does the application run concurrently? How is that configured (e.g., thread pool sizing)?
+- Is the application running in a special mode? (For example, debug mode may have been enabled and be reducing performance.)
+- What system libraries does the application use? What versions are they?
+What memory allocator does the application use?
+- Is the application configured to use large pages for its heap?
+- Is the application compiled? What version of the compiler? What compiler options and optimizations? 64-bit?
+- Has the application encountered an error, and is it now running in a degraded mode?
+- Are there system-imposed limits or resource controls for CPU, memory, file system, disk, or network usage? (These are common with cloud computing.)
+
+Answering these questions may reveal configuration choices that have been overlooked.
