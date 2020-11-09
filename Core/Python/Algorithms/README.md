@@ -222,11 +222,15 @@ To recap, Dijkstra’s algorithm has four steps:
 ### Terminology
 
 When you work with Dijkstra’s algorithm, each edge in the graph has a number associated with it. These are called **weights**.
+
 A graph with weights is called a **weighted graph**. A graph without weights is called an **unweighted graph**.
-To calculate the shortest path in an unweighted graph, use breadth-first search. 
-To calculate the shortest path in a weighted graph, use Dijkstra’s algorithm. 
+
+To calculate the shortest path in an unweighted graph, use breadth-first search. To calculate the shortest path in a weighted graph, use Dijkstra’s algorithm. 
+
 Graphs can also have cycles. It means you can start at a node, travel around, and end up at the same node. An undirected graph means that both nodes point to each other. 
+
 That’s a cycle!
+
 Dijkstra’s algorithm only works with directed acyclic graphs, called DAGs for short.
 
 
