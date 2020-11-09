@@ -9,8 +9,8 @@ The basic process to write this guide is like this:
 3. Compile or edit these raw materials extracted from reading, including summarizing, rephrazing or even creating.
 4. Format the contents.
 
-# Key Concepts
-- [Class, Instance, Object](ClassObject.md)
+# [Key Concepts](Concepts/README.md)
+- Class, Instance, Object
 - Function
 - Closure
 - Decorator
@@ -20,14 +20,20 @@ The basic process to write this guide is like this:
 - MetaClass
 - Duck Type
 - Monkey Patch
-# Data Structure
+
+# [Data Structure](DataStructure/README.md)
 - Dictionary
 - List
 - Dequeue
 - Tree
 - Graph
 - 
+
+# [Algorithms](Algorithms/README.md)
+
+
 # [Tricks](Tricks.md)
+# Regular Expressions
 # Best Practices
 # System Design
 # Debug
