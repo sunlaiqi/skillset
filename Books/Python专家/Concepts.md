@@ -39,7 +39,9 @@
     - [多层装饰器应用顺序](#多层装饰器应用顺序)
     - [装饰带输入参数的函数](#装饰带输入参数的函数)
     - [functools.wraps](#functoolswraps)
+  - [迭代器](#迭代器)
   - [生成器](#生成器)
+  - [生成器表达式](#生成器表达式)
   - [描述符](#描述符)
   - [The Zen of Python](#the-zen-of-python)
     - [如何理解The Zen of Python](#如何理解the-zen-of-python)
@@ -558,7 +560,121 @@ def uppercase(func):
     return wrapper
 ```
 
+## 迭代器
+
+
+
+迭代器就是包含一定数值的对象，同时它可以被迭代，也就是你可以遍历它的所有的值。从技术角度讲，Python中的迭代器就是实现了迭代器协议的对象，也就是实现了两个方法：`__iter__()` 和 `__next__()`。因此，可以通过for-in循环进行遍历操作。
+
+Iterator vs Iterable
+Lists, tuples, dictionaries, sets以及strings全都是可迭代的对象。它们是可迭代的容器，你可以从中获取相应的迭代器。所有这些对象都有支持`iter()`方法用来获取迭代器。
+例如，下面的tuple：
+```python
+mytuple = ("apple", "banana", "cherry")
+myit = iter(mytuple)
+
+print(next(myit))
+print(next(myit))
+print(next(myit))
+
+apple
+banana
+cherry
+```
+
+创建一个迭代器对象
+
+就像所有类需要有一个`__init__`方法进行一些初始化操作一样，迭代器需要`__iter__`做一些针对迭代器的初始化的工作并返回对象本身。
+显而易见，`__next__`让你进行迭代操作，返回序列中的下一个值。
+
+为了防止在for-in中无限循环，使用`StopIteration`作为退出条件。
+
+```python
+class MyIterator:
+    
+    def __init__(self, *args, **kwargs):
+        self.a = 1
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self.a < 5:
+            x = self.a
+            self.a += 1
+            return x
+        else:
+            raise StopIteration
+
+myclass = MyIterator()
+myiter = iter(myclass)
+
+for x in myiter:
+    print(x)
+
+1
+2
+3
+4
+
+```
+
 ## 生成器
+
+生成器相当于为了简化迭代器的语法糖？
+重新用生成器实现上面的例子：
+```python
+def my_generator(x):
+    a = 1
+    while True:
+        if a < x:
+            yield a
+            a += 1
+        else:
+            return
+
+for x in my_generator(5):
+    print(x)
+
+1
+2
+3
+4
+```
+## 生成器表达式
+
+也是一种语法糖，用来更加简洁地生成迭代器。
+```python
+my_generator = (i for i in range(1,5))
+for x in my_generator:
+    print(x)
+```
+
+生成器表达式和列表解析对比:
+列表解析一次生成list，占用内存。生成器表达式只创建生成器对象，一次产生一个值，节省内存。当然，你可以通过`list()`将其转换成list。
+```python
+my_generator = (i for i in range(1,5))
+my_list = [i for i in range(1,5)]
+
+>>> my_list
+[1, 2, 3, 4]
+>>> my_generator
+<generator object <genexpr> at 0x7fbc1991fba0>
+>>> 
+>>> list(my_generator)
+[1, 2, 3, 4]
+```
+通用模式为：
+```python
+ genexpr = (expression for item in collection if condition)
+```
+相当于：
+```python
+def generator():
+    for item in collection:
+        if condition:
+            yield expression
+```
+
 
 ## 描述符
 
