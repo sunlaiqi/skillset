@@ -111,8 +111,8 @@ Off-CPU Profiling (everything else)
 1.  Take a CPU profile
 2.  Understand all software in profile > 1%
 
-•  Discoversawiderangeofperformanceissuesbytheir CPU usage
-•  Narrowssoftware to study
+•  Discovers a wide range of performance issues by their CPU usage
+•  Narrows software to study
 
 #### RTFM Method
 •  How to understand performance tools or metrics:
@@ -207,7 +207,7 @@ Static  | Check configuration. Should be safe.
 ###### mpstat
 
 - Multi-processor statistics, per-CPU
-- Look for unbalanced workloads, hotCPUs.
+- Look for unbalanced workloads, hot CPUs.
 
 ###### free
 
