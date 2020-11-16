@@ -28,10 +28,6 @@
     - [函数和方法](#函数和方法)
     - [高阶函数](#高阶函数)
     - [闭包(Closure)](#闭包closure)
-  - [property对象](#property对象)
-    - [为什么用property对象？](#为什么用property对象)
-    - [property()函数](#property函数)
-    - [@property装饰器](#property装饰器)
   - [装饰器](#装饰器)
     - [为什么使用装饰器？](#为什么使用装饰器)
     - [究竟什么是装饰器？](#究竟什么是装饰器)
@@ -42,7 +38,12 @@
   - [迭代器](#迭代器)
   - [生成器](#生成器)
   - [生成器表达式](#生成器表达式)
+  - [对象的属性(attributes)](#对象的属性attributes)
   - [描述符](#描述符)
+  - [property对象](#property对象)
+    - [为什么用property对象？](#为什么用property对象)
+    - [property()函数](#property函数)
+    - [@property装饰器](#property装饰器)
   - [The Zen of Python](#the-zen-of-python)
     - [如何理解The Zen of Python](#如何理解the-zen-of-python)
   - [什么是Pythonic?](#什么是pythonic)
@@ -380,94 +381,6 @@ print(plus_4(5))
 这里，`make_adder`实际上成了一个生产和设置`add`函数的工厂。请注意这里，`add`函数仍然能够访问`make_adder`函数(包含作用域)的参数`n`的值。
 
 
-## property对象
-
-```python
->>> property
-<class 'property'>
->>> a = property()
->>> a
-<property object at 0x7f8808a2e810>
->>> type(a)
-<class 'property'>
-```
-
-可见property是一个可调用的对象。一个property就是一个属性对象包含了一个getter和一个setter方法。我们常用的是它的函数形式property()。
-
-### 为什么用property对象？
-
-property可以被认为是一种更加"Pythonic"的方式来处理类或者实例的属性，因为：
-- 语法更加简洁和易读
-- 你可以像通常那样访问实例的属性(instanceName.attribute)，同时你可以使用中间“magic”方法(getters和setters)来对新的值进行验证，从而避免直接访问或者修改数据。
-- 通过使用@property，你可以“重用”某个property的名字，从而避免每次都要针对getters, setters和deleters创建新的名字。
-
-### property()函数
-
-property()函数可以创建和返回一个property对象。property()函数有四个参量：
-```python
-property(fget, fset, fdel, doc)
-# fget is a function for retrieving an attribute value. 
-# fset is a function for setting an attribute value. 
-# fdel is a function for deleting an attribute value. 
-# doc creates a docstring for attribute.
-```
-一个property对象有三个方法，getter(), setter()和delete()，分别用来指定fget, fset, 和fdel。 
-
-```python
-class Prop: 
-    def __init__(self): 
-        self._age = 0
-    
-    # function to get value of _age 
-    def get_age(self): 
-        print("getter method called") 
-        return self._age 
-    
-    # function to set value of _age 
-    def set_age(self, a): 
-        print("setter method called") 
-        self._age = a 
-
-    # function to delete _age attribute 
-    def del_age(self): 
-        del self._age 
-        
-    age = property(get_age, set_age, del_age)  
-
-mark = Prop()
-mark.age = 10
-print(mark.age) 
-```
-
-### @property装饰器
-
-装饰器的主要目的就是为了改变类的方法或者属性，这样开发人员不用修改他们的代码就可以使用装饰器的功能。
-下面的例子可以看到使用@property装饰器可以增加验证功能。
-
-```python
-class Prop: 
-    def __init__(self): 
-        self._age = 0
-    
-    # using property decorator 
-    # a getter function 
-    @property
-    def age(self): 
-        print("getter method called") 
-        return self._age 
-    
-    # a setter function 
-    @age.setter 
-    def age(self, a): 
-        if(a < 18): 
-            raise ValueError("Sorry you age is below eligibility criteria") 
-        print("setter method called") 
-        self._age = a 
-
-mark = Prop() 
-mark.age = 19
-print(mark.age) 
-```
 ## 装饰器
 
 ### 为什么使用装饰器？
@@ -561,8 +474,6 @@ def uppercase(func):
 ```
 
 ## 迭代器
-
-
 
 迭代器就是包含一定数值的对象，同时它可以被迭代，也就是你可以遍历它的所有的值。从技术角度讲，Python中的迭代器就是实现了迭代器协议的对象，也就是实现了两个方法：`__iter__()` 和 `__next__()`。因此，可以通过for-in循环进行遍历操作。
 
@@ -675,8 +586,145 @@ def generator():
             yield expression
 ```
 
+## 对象的属性(attributes)
+
+理解Python对象的属性访问机制，对理解后面的property和descriptor很有帮助。
+
+常见的对象接口的设计模式有以下几种：
+
+- **Getters 和 Setters** 这种方法通过方法函数来获取和设置实例变量的值，从而达到封装实例变量的目的。为了保证除了用方法函数之外的方式不能访问到实例变量，我们通过将`_`作为变量名的第一个字符的方式让变量私有。这样，每次对对象属性的访问都要通过显式地函数调用：`anObject.setPrice( someValue ); anObject.getValue()`。
+
+- **Properties** 我们可以通过内置的property函数，将函数getter, setter (和deleter)与某个属性名绑定。这样一来每次引用属性看起来就行简单直接的访问，但是实际上调用了对象的适当的函数。比如`anObject.price = someValue; anObject.value`。
+
+- **Descriptors**. 我们可以将getter, setter (和deleter)绑定到一个单独的类。然后，我们将这个类的一个对象分配给属性名。这样一来，每次引用属性表面上看起来是一次简单直接的访问，实际上调用了描述符对象的函数。比如`anObject.price = someValue; anObject.value`。
+
+注意：
+**Getter 和 Setter** 设计模式不是典型的Pythonic方式。
+
+
+当我们用`someObject.name`的方式来引用一个对象的属性的时候，Python通过几种特别的方式获取这些属性。
+让我们先对属性(attribute)和实例的变量做个区分：
+- 一个属性就是一个名称，受所属对象的限定。是一个语法结构。通常，属性的名字被当作一个键值用来访问对象的实例变量的内部集合`__dict__`。然而，我们可以更改一个属性引用的行为。
+- 而一个实例变量是存储在对象的`__dict__`中的。通常，我们使用属性语法来访问实例变量。属性名就是保存在`__dict__`中的实例变量的键值。
+  
+当我们说someObj.name时，缺省的行为是`someObj.__dict__['name']`
+
+在Python的内部机制中，有几种方式可以获取和设置属性的值。
+
+- 相对方便的方式是使用property函数定义get, set 和 delete方法，并与属性名相关联。property函数会创建descriptors。
+- 稍显麻烦，但是扩展性和重用性更好的技术是你自己定义描述符类。这样会给你带来相当的灵活度。这种方式需要你创建一个定义了get, set 和 delete方法的类，然后你可以将这个描述符类与某个属性名关联起来。
+- 同时，Python还有些底层的特殊方法处理属性访问。有三种方法。第四种方法`__getattribute__`可以让你更改属性的访问方式。
+
+    - `__getattr__ ( self , name ) → value`
+当属性名既不存在于当前实例属性中，也不在父类中时，此方法会被调用返回一个值。`name`是属性名。此方法要么返回一个值，要么抛出`AttributeError`异常。
+
+    - `__setattr__( self , name , value )`
+给属性分配值。`name`是属性名，`value`是待分配的值。注意，如果你在这个方法里做赋值`self.name = value`，会导致`__setattr`的无限递归调用。如果你想访问属性的内部字典`__dict`，可以象这样： `self .__dict __[ name ] = value`。
+
+    - `__delattr__( self , name )`
+从对象中删除指定的属性。`name`是属性名。
+
+    - `__getattribute__( self , name ) → value`
+如果你提供此方法，它将替代缺省的属性搜索方式，然后，如果指定的属性不是类的实例变量，就会调用`__getattr__`。为了提供缺省的搜索方式，此方法必须显式地通过调用`super( Class ,self).__getattribute__(name)`来应用父类的`__getattribute__`方法。
+
 
 ## 描述符
+
+为什么要用描述符(descriptor)？
+封装对象属性的访问。增加灵活性。增加必要的验证和控制。
+
+一个描述符就是一个类，针对另一个对象的某个属性，它提供了详细的获取，设置和删除控制的方法。这样，你就可以将属性定义为相当复杂的对象。达到的效果就是，我们在程序中使用简单的属性引用，但是这些简单的引用背后实际上是一个描述符对象的防范函数。
+
+简单说，如果一个类，针对某个对象，实现了`__get__(), __set()__, or __delete()__`方法就是一个“描述符”。 
+
+## property对象
+
+```python
+>>> property
+<class 'property'>
+>>> a = property()
+>>> a
+<property object at 0x7f8808a2e810>
+>>> type(a)
+<class 'property'>
+```
+
+可见property是一个可调用的对象。一个property就是一个属性对象包含了一个getter和一个setter方法。我们常用的是它的函数形式property()。
+
+### 为什么用property对象？
+
+property可以被认为是一种更加"Pythonic"的方式来处理类或者实例的属性，因为：
+- 语法更加简洁和易读
+- 你可以像通常那样访问实例的属性(instanceName.attribute)，同时你可以使用中间“magic”方法(getters和setters)来对新的值进行验证，从而避免直接访问或者修改数据。
+- 通过使用@property，你可以“重用”某个property的名字，从而避免每次都要针对getters, setters和deleters创建新的名字。
+
+### property()函数
+
+property()函数可以创建和返回一个property对象。property()函数有四个参量：
+```python
+property(fget, fset, fdel, doc)
+# fget is a function for retrieving an attribute value. 
+# fset is a function for setting an attribute value. 
+# fdel is a function for deleting an attribute value. 
+# doc creates a docstring for attribute.
+```
+一个property对象有三个方法，getter(), setter()和delete()，分别用来指定fget, fset, 和fdel。 
+
+```python
+class Prop: 
+    def __init__(self): 
+        self._age = 0
+    
+    # function to get value of _age 
+    def get_age(self): 
+        print("getter method called") 
+        return self._age 
+    
+    # function to set value of _age 
+    def set_age(self, a): 
+        print("setter method called") 
+        self._age = a 
+
+    # function to delete _age attribute 
+    def del_age(self): 
+        del self._age 
+        
+    age = property(get_age, set_age, del_age)  
+
+mark = Prop()
+mark.age = 10
+print(mark.age) 
+```
+
+### @property装饰器
+
+装饰器的主要目的就是为了改变类的方法或者属性，这样开发人员不用修改他们的代码就可以使用装饰器的功能。
+下面的例子可以看到使用@property装饰器可以增加验证功能。
+
+```python
+class Prop: 
+    def __init__(self): 
+        self._age = 0
+    
+    # using property decorator 
+    # a getter function 
+    @property
+    def age(self): 
+        print("getter method called") 
+        return self._age 
+    
+    # a setter function 
+    @age.setter 
+    def age(self, a): 
+        if(a < 18): 
+            raise ValueError("Sorry you age is below eligibility criteria") 
+        print("setter method called") 
+        self._age = a 
+
+mark = Prop() 
+mark.age = 19
+print(mark.age) 
+```
 
 ## The Zen of Python
 
