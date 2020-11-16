@@ -633,28 +633,70 @@ def generator():
 为什么要用描述符(descriptor)？
 封装对象属性的访问。增加灵活性。增加必要的验证和控制。
 
-一个描述符就是一个类，针对另一个对象的某个属性，它提供了详细的获取，设置和删除控制的方法。这样，你就可以将属性定义为相当复杂的对象。达到的效果就是，我们在程序中使用简单的属性引用，但是这些简单的引用背后实际上是一个描述符对象的方法函数。
+一个描述符就是一个类，可以控制另一个对象的某个属性，它提供了详细的获取，设置和删除其属性的方法。这样，你就可以将属性定义为相当复杂的对象。达到的效果就是，我们在程序中使用简单的属性引用，但是这些简单的引用背后实际上是一个描述符对象的方法函数。
 
-简单说，如果一个类，针对某个对象，实现了`__get__(), __set()__, or __delete()__`方法就是一个“描述符”。 
+简单说，如果一个类，针对某个对象，实现了`__get__(), __set()__, or __delete()__`方法，也就是描述符协议，就是一个“描述符”。 其中最重要的方法是`__get__(), __set__()`。
+```python
+__get__(self, obj, type=None) -> object
+__set__(self, obj, value) -> None
+```
+其中：
+- **self** 是描述符实例本身
+- **obj** 描述符附着的对象的实例
+- **type** 描述符附着的对象的类型
+
+下面是一个简单的利用描述符绑定对象属性的例子。
+
+```python
+class MyDescriptor: 
+    
+    def __init__(self, value=0):
+        self.value = value
+
+    def __get__(self, obj, type=None): 
+        print("getter method called") 
+        return self.value
+    
+    def __set__(self, obj, value): 
+        print(f"setter method called for {value}") 
+        if value > 9 or value < 0 or int(value) != value:
+            raise AttributeError(f"The value {value} is invalid")
+        self.value = value
+class Foo:
+    age = MyDescriptor()
+
+mark = Foo()
+print(mark.age)
+mark2 = Foo()
+print(mark.age)
+print(mark2.age)
+mark.age = 8
+print(mark.age) 
+print(mark2.age)
+```
+```
+# Result
+getter method called
+0
+getter method called
+0
+getter method called
+0
+setter method called for 8
+getter method called
+8
+getter method called
+8
+```
+这只是个简单的描述符的应用，而且有显然的缺陷。我们会用单独的篇幅讲述描述符。
 
 ## property对象
 
-```python
->>> property
-<class 'property'>
->>> a = property()
->>> a
-<property object at 0x7f8808a2e810>
->>> type(a)
-<class 'property'>
-```
-
-可见property是一个可调用的对象。一个property就是一个属性对象包含了一个getter和一个setter方法。我们常用的是它的函数形式property()。
+property函数为我们提供了一个很方便的方式，不用单独定义一个类就可以实现一个简单的描述符。只要我们写好`getter`和`setter`方法函数，然后通过property将它们绑定到一个属性名就可以了。
 
 ### 为什么用property对象？
 
 property可以被认为是一种更加"Pythonic"的方式来处理类或者实例的属性，因为：
-- 语法更加简洁和易读
 - 你可以像通常那样访问实例的属性(instanceName.attribute)，同时你可以使用中间“magic”方法(getters和setters)来对新的值进行验证，从而避免直接访问或者修改数据。
 - 通过使用@property，你可以“重用”某个property的名字，从而避免每次都要针对getters, setters和deleters创建新的名字。
 
@@ -663,10 +705,8 @@ property可以被认为是一种更加"Pythonic"的方式来处理类或者实�
 property()函数可以创建和返回一个property对象。property()函数有四个参量：
 ```python
 property(fget, fset, fdel, doc)
-# fget is a function for retrieving an attribute value. 
-# fset is a function for setting an attribute value. 
-# fdel is a function for deleting an attribute value. 
-# doc creates a docstring for attribute.
+# fget, fset, fdel分别是用来获取，设置，删除某个属性值的函数
+# doc为属性创建docstring
 ```
 一个property对象有三个方法，getter(), setter()和delete()，分别用来指定fget, fset, 和fdel。 
 
@@ -675,20 +715,21 @@ class Prop:
     def __init__(self): 
         self._age = 0
     
-    # function to get value of _age 
+    # 获取_age值的函数 
     def get_age(self): 
         print("getter method called") 
         return self._age 
     
-    # function to set value of _age 
+    # 设置_age值的函数 
     def set_age(self, a): 
         print("setter method called") 
         self._age = a 
 
-    # function to delete _age attribute 
+    # 删除_age属性的函数 
     def del_age(self): 
         del self._age 
         
+    # 于age属性惯量    
     age = property(get_age, set_age, del_age)  
 
 mark = Prop()
@@ -698,22 +739,21 @@ print(mark.age)
 
 ### @property装饰器
 
-装饰器的主要目的就是为了改变类的方法或者属性，这样开发人员不用修改他们的代码就可以使用装饰器的功能。
-下面的例子可以看到使用@property装饰器可以增加验证功能。
+装饰器的主要目的就是为了改变类的方法或者属性，这样开发人员不用修改他们的代码就可以使用装饰器的功能。下面的例子可以看到使用@property装饰器可以增加验证功能。
 
 ```python
 class Prop: 
     def __init__(self): 
         self._age = 0
     
-    # using property decorator 
-    # a getter function 
+    # 使用property装饰器
+    # getter函数
     @property
     def age(self): 
         print("getter method called") 
         return self._age 
     
-    # a setter function 
+    # setter函数
     @age.setter 
     def age(self, a): 
         if(a < 18): 
