@@ -1,3 +1,19 @@
+- [Observability Tools](#observability-tools)
+  - [Tool Types](#tool-types)
+    - [Counters](#counters)
+    - [Tracing](#tracing)
+    - [Profiling](#profiling)
+    - [Monitoring (sar)](#monitoring-sar)
+  - [Observability Sources](#observability-sources)
+    - [/proc](#proc)
+    - [/sys](#sys)
+    - [Other Observability Sources](#other-observability-sources)
+  - [DTrace](#dtrace)
+    - [Probes](#probes)
+    - [D Language](#d-language)
+    - [Overheads](#overheads)
+  - [perf](#perf)
+
 # Observability Tools
 
 With the addition of tracing frameworks, especially dynamic tracing, everything can now be observed, and virtually any activity can be observed directly. 
