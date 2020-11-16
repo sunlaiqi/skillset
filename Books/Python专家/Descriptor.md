@@ -1,3 +1,14 @@
+- [描述符](#描述符)
+  - [描述符设计模式](#描述符设计模式)
+  - [调用描述符](#调用描述符)
+    - [描述符调用纵览](#描述符调用纵览)
+  - [自动命名通知](#自动命名通知)
+  - [描述符的完善](#描述符的完善)
+  - [为什么使用描述符](#为什么使用描述符)
+    - [Lazy Properties](#lazy-properties)
+    - [D.R.Y. Code](#dry-code)
+  - [ORM的例子](#orm的例子)
+
 
 # 描述符
 
@@ -62,7 +73,7 @@ Let's look at what happens when we set an attribute value, for example, using ov
 
 When we get an attribute value, for example, using oven.celsius, the following happens. Since celsius is a Descriptor with a __get__ method, this method is evaluated, and returns the celsius temperature.
 
-## Calling a Descriptor
+## 调用描述符
 
 The most common method of calling a descriptor is for the descriptor to be invoked automatically when you access an attribute. A typical example would be my_obj.attribute_name. This will cause your object to look up attribute_name in the my_obj object. If your attribute_name happens to define __get__(), then attribute_name.__get__(my_obj) will get called. This all depends on whether your instance is an object or a class.
 
@@ -77,7 +88,7 @@ A data descriptor will always, ALWAYS override instance dictionaries
 The non-data descriptor can be overridden by instance dictionaries.
 More information on how all this works can be found in Python’s data model, the Python source code and in Guido van Rossum’s document, “Unifying types and class in Python”.
 
-## Overview of descriptor invocation
+### 描述符调用纵览
 
 A descriptor can be called directly with desc.__get__(obj) or desc.__get__(None, cls).
 
@@ -147,7 +158,8 @@ Data descriptors always override instance dictionaries.
 
 Non-data descriptors may be overridden by instance dictionaries.
 
-## Automatic name notification
+## 自动命名通知
+
 Sometimes it is desirable for a descriptor to know what class variable name it was assigned to. When a new class is created, the type metaclass scans the dictionary of the new class. If any of the entries are descriptors and if they define __set_name__(), that method is called with two arguments. The owner is the class where the descriptor is used, and the name is the class variable the descriptor was assigned to.
 
 The implementation details are in type_new() and set_names() in Objects/typeobject.c.
@@ -155,9 +167,7 @@ The implementation details are in type_new() and set_names() in Objects/typeobje
 Since the update logic is in type.__new__(), notifications only take place at the time of class creation. If descriptors are added to the class afterwards, __set_name__() will need to be called manually.
 
 
-
-================
-## 描述符的问题
+## 描述符的完善
 
 Another important thing to know is that Python descriptors are instantiated just once per class. That means that every single instance of a class containing a descriptor shares that descriptor instance. This is something that you might not expect and can lead to a classic pitfall, like this:
 ```python
@@ -309,7 +319,7 @@ $ python descriptors5.py
 0
 0
 
-## Why Use Python Descriptors?
+## 为什么使用描述符
 
 Now you know what Python descriptors are and how Python itself uses them to power some of its features, like methods and properties. You’ve also seen how to create a Python descriptor while avoiding some common pitfalls. Everything should be clear now, but you may still wonder why you should use them.
 
@@ -396,6 +406,7 @@ print(my_deep_thought_instance.meaning_of_life)
 In this example, you can see that just implementing .__set__(), even if it doesn’t do anything at all, creates a data descriptor. Now, the trick of the lazy property stops working.
 
 ### D.R.Y. Code
+
 Another typical use case for descriptors is to write reusable code and make your code D.R.Y. Python descriptors give developers a great tool to write reusable code that can be shared among different properties or even different classes.
 
 Consider an example where you have five different properties with the same behavior. Each property can be set to a specific value only if it’s an even number. Otherwise, it’s value is set to 0:
@@ -483,7 +494,7 @@ print(my_values.value2)
 ```
 This code looks a lot better now! The duplicates are gone and the logic is now implemented in a single place so that if you need to change it, you can do so easily.
 
-## ORM example
+## ORM的例子
 
 The following code is simplified skeleton showing how data descriptors could be used to implement an object relational mapping.
 

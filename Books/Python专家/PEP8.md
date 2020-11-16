@@ -1,6 +1,10 @@
-## 代码规范
+- [代码规范](#代码规范)
+	- [推荐命名规范](#推荐命名规范)
+		- [变量命名 - 'Public'和'Private'](#变量命名---public和private)
 
-### 推荐命名规范
+# 代码规范
+
+## 推荐命名规范
 
 Module names − all_lower_case
 Class names and exception names − CamelCase
@@ -8,7 +12,7 @@ Global and local names − all_lower_case
 Functions and method names − all_lower_case
 Constants − ALL_UPPER_CASE
 
-#### 变量命名 - 'Public'和'Private'
+### 变量命名 - 'Public'和'Private'
 Python中没有所谓的'私有'属性，理论上任何属性都是'共有'的。Python只是通过命名规范来来约定哪些属性是公开的，哪些属性是内部使用的。
 
 - Public attributes or variables (intended to be used by the importer of this module or user of this class) − `regular_lower_case`
