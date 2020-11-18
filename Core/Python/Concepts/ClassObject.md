@@ -1,3 +1,14 @@
+- [Class and Object](#class-and-object)
+  - [Namespace](#namespace)
+  - [Scope](#scope)
+  - [global/nonlocal statements](#globalnonlocal-statements)
+    - [Scopes and Namespaces Example](#scopes-and-namespaces-example)
+  - [Class Definition Syntax](#class-definition-syntax)
+    - [Class Objects](#class-objects)
+    - [Instance Objects](#instance-objects)
+    - [Method Objects](#method-objects)
+    - [Class and Instance Variables](#class-and-instance-variables)
+    - [Name mangling](#name-mangling)
 
 # Class and Object
 

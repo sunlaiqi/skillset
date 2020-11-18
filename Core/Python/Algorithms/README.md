@@ -1,3 +1,20 @@
+- [Algorithms](#algorithms)
+  - [Big O](#big-o)
+  - [Selection sort](#selection-sort)
+  - [Bubble Sort](#bubble-sort)
+  - [Recursion](#recursion)
+    - [Base case and recursive case](#base-case-and-recursive-case)
+    - [The stack](#the-stack)
+  - [Quicksort](#quicksort)
+  - [Hash tables](#hash-tables)
+  - [Breadth-first search](#breadth-first-search)
+    - [Graphs](#graphs)
+  - [Finding the shortest path](#finding-the-shortest-path)
+    - [Queues](#queues)
+    - [Implementing the graph](#implementing-the-graph)
+  - [Dijkstra's algorithm](#dijkstras-algorithm)
+    - [Terminology](#terminology)
+
 # Algorithms
 
 ## Big O

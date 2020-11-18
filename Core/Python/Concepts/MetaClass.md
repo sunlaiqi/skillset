@@ -1,4 +1,10 @@
+- [Metaclass](#metaclass)
+  - [Defining a Class Dynamically](#defining-a-class-dynamically)
+    - [Examples](#examples)
+    - [Custom Metaclasses](#custom-metaclasses)
+    - [Object Factory and Class Factory](#object-factory-and-class-factory)
 
+# Metaclass
 
 In general, the type of any new-style class is type.
 The type of the built-in classes you are familiar with is also type:

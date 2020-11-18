@@ -1,3 +1,15 @@
+- [Data Structure](#data-structure)
+    - [Array](#array)
+      - [Accessing Array Element](#accessing-array-element)
+    - [List](#list)
+    - [Arrays and linked lists](#arrays-and-linked-lists)
+    - [tuple](#tuple)
+    - [dictionary](#dictionary)
+    - [set](#set)
+      - [Accessing Values in a Set](#accessing-values-in-a-set)
+      - [Union of Sets](#union-of-sets)
+      - [Compare Sets](#compare-sets)
+
 # Data Structure
 
 - Dictionary
