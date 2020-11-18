@@ -2,6 +2,8 @@
 - [装饰器高阶篇](#装饰器高阶篇)
   - [高级主题](#高级主题)
     - [类作为装饰器](#类作为装饰器)
+      - [类装饰类](#类装饰类)
+      - [类装饰函数](#类装饰函数)
     - [内置类装饰器](#内置类装饰器)
     - [装饰整个类](#装饰整个类)
   - [高级应用](#高级应用)
@@ -18,6 +20,35 @@
 
 ### 类作为装饰器
 
+#### 类装饰类
+
+```python
+>>> def decorator(cls):
+...     class NewClass(cls): 
+...         attr = 100
+...     return NewClass 
+...
+>>> @decorator
+... class X:
+...     pass
+...
+>>> @decorator 
+... class Y:
+...     pass
+...
+>>> @decorator 
+... class Z:
+...     pass
+...
+>>> X.attr 
+100
+>>> Y.attr 
+100
+>>> Z.attr 
+100
+```
+
+#### 类装饰函数
 为了将类作为装饰器，我么需要使用类的`__call__`方法。
 ```python
 # Python program showing 

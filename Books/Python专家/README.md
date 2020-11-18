@@ -26,7 +26,7 @@
 
 [代码规范](PEP8.md)
 
-异常
+[异常](Exceptions.md)
 
 调试
 

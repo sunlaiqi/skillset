@@ -17,7 +17,6 @@
     - [类的实例化过程](#类的实例化过程)
     - [类属性和实例属性](#类属性和实例属性)
     - [自定义metaclass](#自定义metaclass)
-    - [类装饰器](#类装饰器)
     - [方法重载(overloading)](#方法重载overloading)
     - [Magic method](#magic-method)
     - [覆盖(overriding)](#覆盖overriding)
@@ -79,8 +78,6 @@ Encapsulation - 封装
 Abstraction - 抽象
 
 但是Python不是100%面向对象，如java那样。比如，Python中没有私有的访问限制，但是会通过其特有的表示法来进行规范。
-
-我们会有专门的章节讲述Python的类和对象。
 
 ### Python是面向过程的语言
 
@@ -255,34 +252,6 @@ class value
     ... pass
     ...
 >>> Foo.attr 
-100
-```
-
-### 类装饰器
-
-```python
->>> def decorator(cls):
-...     class NewClass(cls): 
-...         attr = 100
-...     return NewClass 
-...
->>> @decorator
-... class X:
-...     pass
-...
->>> @decorator 
-... class Y:
-...     pass
-...
->>> @decorator 
-... class Z:
-...     pass
-...
->>> X.attr 
-100
->>> Y.attr 
-100
->>> Z.attr 
 100
 ```
 
