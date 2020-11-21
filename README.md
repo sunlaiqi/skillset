@@ -1,11 +1,12 @@
 # Table of Content
 
-- [My Expectations](#myexpections)
-- [Career Target](#careertarget)
+- [Table of Content](#table-of-content)
+- [My Expectations](#my-expectations)
+- [Career Target](#career-target)
 - [Goals](#goals)
 - [Platform](#platform)
-- [Core Skills](#core)
-- [Supportive Skills](#support)
+- [Core Skills](#core-skills)
+- [Supportive Skills](#supportive-skills)
 
 
 
