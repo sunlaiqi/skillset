@@ -15,4 +15,4 @@ for file in `cat ../difffile.txt`; do mv "$file" ../Doc-bk/; done
 
 while read -r file; do mv "$file" /path/of/destination ; done < ../difffile.txt
 
-while read -r file; do rm "file" ; done < pdffile.txt
+while read -r file; do rm "file" ; done < ../pdffile.txt

@@ -27,3 +27,19 @@ One interesting aspect of this architecture is that you don’t need to restart 
 Before the kernel runs any BPF program, it needs to know which execution point the program is attached to. There are multiple attachment points in the kernel, and the list is growing. The execution points are defined by the BPF program types. When you choose an execution point, the kernel also makes available specific function helpers that you can use to work with the data that your program receives, making execution points and BPF programs tightly coupled.
 
 The final component in BPF’s architecture is responsible for sharing data between the kernel and user-space. This component is called a BPF map. BPF maps are bidirectional structures to share data. This means that you can write and read them from both sides, the kernel and user-space. There are several types of structures, from simple arrays and hash maps to specialized maps, that allow you to save entire BPF programs in them.
+<iframe src="https://onedrive.live.com/downlad?cid=8D8671D2B7405137&resid=8D8671D2B7405137%21521&authkey=AKm2HmnfSZIs6cE" width="320" height="180" frameborder="0" scrolling="no" allowfullscreen></iframe>
+
+
+wget -r --user=luyuanchun@yahoo.com --password='Spring33520' --no-parent --no-check-certificate  https://onedrive.live.com/?id=8D8671D2B7405137%21113&cid=8D8671D2B7405137
+
+<iframe src="https://onedrive.live.com/embed?cid=8D8671D2B7405137&resid=8D8671D2B7405137%21113&authkey=ABdSkzZCP8HsOtI" width="165" height="128" frameborder="0" scrolling="no"></iframe>
+
+<iframe src="https://onedrive.live.com/embed?cid=8D8671D2B7405137&resid=8D8671D2B7405137%21113&authkey=ABdSkzZCP8HsOtI" width="165" height="128" frameborder="0" scrolling="no"></iframe>
+
+wget -r -nH --no-parent --no-check-certificate robots=off --reject="index.html*" "https://onedrive.live.com/embed?cid=8D8671D2B7405137&resid=8D8671D2B7405137%21113&authkey=ABdSkzZCP8HsOtI"
+
+wget --recursive --no-parent --no-check-certificate --reject="index.html*" "https://onedrive.live.com/embed?cid=8D8671D2B7405137&resid=8D8671D2B7405137%21113&authkey=ABdSkzZCP8HsOtI"
+
+wget  "https://onedrive.live.com/embed?cid=8D8671D2B7405137&resid=8D8671D2B7405137%21113&authkey=ABdSkzZCP8HsOtI"
+
+wget  -r --no-parent "https://onedrive.live.com/embed?cid=8D8671D2B7405137&resid=8D8671D2B7405137%21113&authkey=ABdSkzZCP8HsOtI"

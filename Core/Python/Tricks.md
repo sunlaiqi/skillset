@@ -10,16 +10,26 @@
 - [itertools](#itertools)
   - [Generate Permutations and Combinations With itertools](#generate-permutations-and-combinations-withitertools)
 - [Dictionary](#dictionary)
+  - [Dictionary Default Values](#dictionary-default-values)
   - [How to merge two dicts](#how-to-merge-two-dicts)
+  - [Sort Dictionary](#sort-dictionary)
+    - [lexicographical ordering](#lexicographical-ordering)
+    - [key func in sorted](#key-func-in-sorted)
   - [How to sort a dict descending by its value and then ascending (A-Z) by its key (alphabetically).](#how-to-sort-a-dict-descending-by-its-value-and-then-ascending-a-z-by-its-key-alphabetically)
   - [Define Default Values in Dictionaries With .get() and .setdefault()](#define-default-values-in-dictionaries-with-get-and-setdefault)
   - [Handle Missing Dictionary Keys With collections.defaultdict()](#handle-missing-dictionary-keys-withcollectionsdefaultdict)
   - [Count Hashable Objects With collections.Counter](#count-hashable-objects-withcollectionscounter)
+  - [Emulating Switch/Case Statements With Dicts](#emulating-switchcase-statements-with-dicts)
+- [Some dict tricks](#some-dict-tricks)
+  - [Dictionary Pretty-Printing](#dictionary-pretty-printing)
 - [Functions](#functions)
   - [Function argument unpacking](#function-argument-unpacking)
   - [Measure the execution time of small bits of Python code with the "timeit" module](#measure-the-execution-time-of-small-bits-of-python-code-with-the-timeit-module)
 - [Debug](#debug)
   - [Debug With breakpoint() Instead of print()](#debug-with-breakpoint-instead-of-print)
+- [Pythonic Productivity Techniques](#pythonic-productivity-techniques)
+  - [Isolating Project Dependencies With Virtualenv](#isolating-project-dependencies-with-virtualenv)
+  - [Peeking Behind the Bytecode Curtain](#peeking-behind-the-bytecode-curtain)
 
 
 ## List
@@ -190,6 +200,15 @@ With permutations, the order of the elements matters, so ('sam', 'devon')repres
 
 ## Dictionary
 
+### Dictionary Default Values
+
+Syntax
+```python
+dictionary.get(keyname, value)
+```
+
+When `get()` is called, it checks if the given key exists in the dictionary. If it does, the value for the key is returned. If it does not exist, then the value of the default parameter is returned instead.
+
 ### How to merge two dicts
 
 ```python
@@ -220,6 +239,42 @@ z = dict(list(x.items()) + list(y.items()))
 
 ```
 
+### Sort Dictionary
+
+#### lexicographical ordering
+
+The key/value tuples are ordered using Python’s standard lexico- graphical ordering for comparing sequences.
+
+To compare two tuples, Python compares the items stored at index zero first. If they differ, this defines the outcome of the comparison. If they’re equal, the next two items at index one are compared, and so on.
+
+```python
+>>> xs = {'a': 4, 'c': 2, 'b': 3, 'd': 1}
+>>> sorted(xs.items())
+[('a', 4), ('b', 3), ('c', 2), ('d', 1)]
+>>> dict(sorted(xs.items()))
+{'a': 4, 'b': 3, 'c': 2, 'd': 1}
+```
+
+####  key func in sorted
+
+Syntax
+```python
+sorted(iterable, key=key, reverse=reverse)
+```
+Examples:
+
+```python
+ >>> sorted(xs.items(), key=lambda x: x[1]) 
+ [('d', 1), ('c', 2), ('b', 3), ('a', 4)]
+ ```
+ Use operator module
+ ```python
+ >>> import operator
+>>> sorted(xs.items(), key=operator.itemgetter(1)) 
+[('d', 1), ('c', 2), ('b', 3), ('a', 4)]
+```
+
+Apparently, lambda has more controls than operater.itemgetter.
 
 ### How to sort a dict descending by its value and then ascending (A-Z) by its key (alphabetically).
 ```python
@@ -318,8 +373,82 @@ Are you curious what the two most common words were? Just use `most_common()`:
 [('there', 4), ('was', 4)]
 ```
 
+### Emulating Switch/Case Statements With Dicts
+
+The idea here is to leverage the fact that Python has first-class func- tions. This means they can be passed as arguments to other functions, returned as values from other functions, and assigned to variables and stored in data structures.
+
+The core idea here is to define a dictionary that maps lookup keys for the input conditions to functions that will carry out the intended operations:
+
+To support a default case, use `get()` of dictionary
+
+```python
+def dispatch_dict(operator, x, y):
+    return {
+        'add': lambda: x + y, 
+        'sub': lambda: x - y, 
+        'mul': lambda: x * y, 
+        'div': lambda: x / y,
+        }.get(operator, lambda: None)()
+print(dispatch_dict('mul', 2, 8))
+print(dispatch_dict('unknown', 2, 8))
+# 16
+# None
+```
+
+## Some dict tricks
+
+How Python process dict for 
+`{True: 'yes', 1: 'no', 1.0: 'maybe'}`
+```
+>>> xs = dict()
+>>> xs[True] = 'yes' 
+>>> xs[1] = 'no'
+>>> xs[1.0] = 'maybe'
+
+#
+>>> True == 1 == 1.0 
+True
+ >>> ['no', 'yes'][True] 
+ 'yes'
+```
+The Boolean type is a subtype of the integer type, and Boolean values behave like the values 0 and 1, respec- tively, in almost all contexts, the exception being that when converted to a string, the strings ‘False’ or ‘True’ are returned, respectively.
+
+Python’s dictionaries don’t update the key object itself when a new value is associated with it.
+
+The {True: 'yes', 1: 'no', 1.0: 'maybe'} dictionary expres- sion evaluates to {True: 'maybe'} because the keys True, 1, and 1.0 all compare as equal, and they all have the same hash value:
+
+```
+>>> True == 1 == 1.0
+True
+>>> (hash(True), hash(1), hash(1.0)) 
+(1, 1, 1)
+```
+
+### Dictionary Pretty-Printing
+
+use json.dumps() (it's like jq in bash)
+
+```python 
+>>> mapping = {'a': 23, 'b': 42, 'c': 0xc0ffee} 
+>>> str(mapping)
+{'b': 42, 'c': 12648430, 'a': 23}
+
+>>> import json
+>>> json.dumps(mapping, indent=4, sort_keys=True)
+{
+    "a": 23,
+    "b": 42,
+    "c": 12648430 
+}
+```
+
+json module only works with dicts that contain primitive types.
+Another downside of using json.dumps() is that it can’t stringify complex data types.
 
 ## Functions
+
+
+
 
 ### Function argument unpacking
 ```python
@@ -384,3 +513,50 @@ $python -m pdb myscript.py
 ```
 Like `breakpoint()`, `pdb.set_trace()` will put you into the `pdb` debugger. It’s just not quite as clean and is a tad more to remember.
 There are other debuggers available that you may want to try, but `pdb` is part of the standard library, so it’s always available. 
+
+## Pythonic Productivity Techniques
+
+dir() and help()
+
+### Isolating Project Dependencies With Virtualenv
+
+Here, we put Python virtual environment into a separate folder named `./venv` under current directory.
+
+```bash
+$ python3 -m venv ./venv
+$ ls venv/
+bin        include    lib        pyvenv.cfg
+$ source ./venv/bin/activate 
+(venv) $
+# Stop virtual env
+(venv) $ deactivate
+```
+
+### Peeking Behind the Bytecode Curtain
+
+When the CPython interpreter executes your program, it first trans- lates it into a sequence of bytecode instructions. Bytecode is an in- termediate language for the Python virtual machine that’s used as a performance optimization.
+
+Each function has a __code__ attribute (in Python 3) that we can use to get at the virtual machine instructions, constants, and variables used by our greet function:
+```python
+def greet(name):
+    return 'Hello, ' + name + '!'
+>>> greet.__code__.co_code 
+b'dx01|x00x17x00dx02x17x00Sx00' 
+>>> greet.__code__.co_consts 
+(None, 'Hello, ', '!')
+>>> greet.__code__.co_varnames 
+('name',)
+```
+
+Use disassembler to make inspecting the bytecode easier.
+```python
+>>> import dis
+>>> dis.dis(greet)
+  2           0 LOAD_CONST               1 ('Hello, ')
+              2 LOAD_FAST                0 (name)
+              4 BINARY_ADD
+              6 LOAD_CONST               2 ('!')
+              8 BINARY_ADD
+             10 RETURN_VALUE
+>>> 
+```
