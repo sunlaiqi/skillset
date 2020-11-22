@@ -13,6 +13,21 @@
     - [D Language](#d-language)
     - [Overheads](#overheads)
   - [perf](#perf)
+    - [SystemTap](#systemtap)
+    - [perf](#perf-1)
+    - [Other Tools](#other-tools)
+    - [Visualizations](#visualizations)
+  - [Experimentation](#experimentation)
+    - [Ad Hoc](#ad-hoc)
+    - [SysBench](#sysbench)
+  - [Tuning](#tuning)
+    - [Compiler Options](#compiler-options)
+    - [Scheduling Priority and Class](#scheduling-priority-and-class)
+    - [Scheduler Options](#scheduler-options)
+    - [Process Binding](#process-binding)
+    - [Exclusive CPU Sets](#exclusive-cpu-sets)
+    - [Resource Controls](#resource-controls)
+    - [Processor Options (BIOS Tuning)](#processor-options-bios-tuning)
 
 # Observability Tools
 
@@ -169,3 +184,249 @@ There are also overheads when saving data into variables, especially associative
 
 Some of the tracing overheads from perf(1) should be similar to those of DTrace. In typical use, DTrace programs are written to summarize data in-kernel (aggregations), which perf(1) does not currently do. With perf(1), data is passed to the user level for post-processing (it has a scripting framework to help), which can cause significant additional overhead when tracing frequent events.
 
+**Kernel Profiling**
+DTrace can be used to identify what the kernel is doing.
+
+***One-Liners***
+Sample kernel stacks at 997 Hz:
+```
+dtrace -n 'profile-997 /arg0/ { @[stack()] = count(); }'
+```
+The most frequent stack is printed last.
+
+**User Profiling**
+CPU time spent in user mode can be profiled similarly to the kernel. The following one-liner matches on user-level code by checking on arg1 (user PC) and also matches processes named "mysqld" (MySQL database):
+```
+# dtrace -n 'profile-97 /arg1 && execname == "mysqld"/ { @[ustack()] = count(); }'
+dtrace: description 'profile-97 ' matched 1 probe
+```
+
+Sample user stacks at 97 Hz, for PID 123:
+```
+dtrace -n 'profile-97 /arg1 && pid == 123/ { @[ustack()] = count(); }'
+```
+Sample user stacks at 97 Hz, for all processes named "sshd":
+```
+dtrace -n 'profile-97 /arg1 && execname == "sshd"/ { @[ustack()] = count(); }'
+```
+
+**Function Tracing**
+
+While profiling can show the total CPU time consumed by functions, it doesn’t show the runtime distribution of those function calls. This can be determined by using tracing and the vtimestamp built-in—a high-resolution timestamp that increments only when the current thread is on-CPU. A function’s CPU time can be measured by tracing its entry and return and calculating the vtimestamp delta.
+
+**CPU Cross Calls**
+
+Excessive CPU cross calls can reduce performance due to their CPU consumption.
+```
+# dtrace -n 'sysinfo:::xcalls { @[stack()] = count(); }'
+```
+**Interrupts**
+DTrace allows interrupts to be traced and examined.
+
+**Scheduler Tracing**
+The scheduler provider (sched) provides probes for tracing operations of the kernel CPU scheduler. 
+
+sched Provider Probes 
+
+Probe       | Description
+------------|-----------------------------------------------
+on-cpu      | The current thread begins execution on-CPU.
+off-cpu     | The current thread is about to end execution on-CPU.
+remain-cpu  | The scheduler has decided to continue running the current thread.
+enqueue     | A thread is being enqueued to a run queue (examine it via args[]).
+dequeue     | A thread is being dequeued from a run queue (examine it via args[]).
+preempt     | The current thread is about to be preempted by another.
+
+Since many of these fire in thread context, the curthread built-in refers to the thread in question, and thread-local variables can be used.
+
+### SystemTap
+
+SystemTap can also be used on Linux systems for tracing of scheduler events. 
+
+### perf
+
+A collection of tools for profiling and tracing, now called Linux Performance Events (LPE)
+
+perf Subcommands
+
+Command     | Description
+------------|------------------------------------------------------------
+annotate    | Read perf.data (created by perf record) and display annotated code.
+diff        | Read two perf.data files and display the differential profile.
+evlist      | List the event names in a perf.data file.
+inject      | Filter to augment the events stream with additional information.
+kmem        | Tool to trace/measure kernel memory (slab) properties.
+kvm         | Tool to trace/measure kvm guest OS.
+list        | List all symbolic event types.
+lock        | Analyze lock events.
+probe       | Define new dynamic tracepoints.
+record      | Run a command and record its profile into perf.data.
+report      | Read perf.data (created by perf record) and display the profile.
+sched       | Tool to trace/measure scheduler properties (latencies).
+script      | Read perf.data (created by perf record) and display trace output.
+stat        | Run a command and gather performance counter statistics.
+timechart   | Tool to visualize total system behavior during a workload.
+top         | System profiling tool.
+
+
+**System Profiling**
+perf(1) can be used to profile CPU call paths, summarizing where CPU time is spent in both kernel- and user-space. This is performed by the record command, which captures samples at regular intervals to a perf.data file. A report com- mand is then used to view the file.
+```
+# perf record -a -g -F 997 sleep 10
+...
+# perf report --stdio
+```
+All CPUs (-a) are sampled with call stacks (-g) at 997 Hz (-F 997) for 10 s (sleep 10). The --stdio option is used to print all the out- put, instead of operating in interactive mode.
+These kernel and process `symbols` are available only if their debuginfo files are available; otherwise hex addresses are shown.
+perf(1) operates by programming an overflow interrupt for the CPU cycle counter. Since the cycle rate varies on modern processors, a “scaled” counter is used that remains constant.
+
+**Process Profiling**
+The fol- lowing command executes the command and creates the perf.data file:
+```
+# perf record -g command 
+```
+
+**Scheduler Latency**
+The sched command records and reports scheduler statistics.
+```
+# perf sched record sleep 10
+...
+# perf sched latency
+```
+Scheduler events are frequent, so this type of tracing incurs CPU and storage overhead.
+An advantage of the DTrace model of in-kernel filtering and aggregation: it can summarize data while tracing and pass only the summary to user-space, minimiz- ing overhead. 
+               
+**stat**
+The stat command provides a high-level summary of CPU cycle behavior based on CPC.
+```
+$ perf stat gzip file1
+```
+The statistics include the cycle and instruction count, and the IPC (inverse of CPI). This is an extremely useful high-level metric for determining the types of cycles occurring and how many of them are stall cycles.
+
+The following lists other counters that can be examined:
+```
+# perf list
+```
+Look for both “Hardware event” and “Hardware cache event.” 
+
+These events can be specified using –e.
+```
+$ perf stat -e instructions,cycles,L1-dcache-load-misses,LLC-load-misses,dTLB-load- misses gzip file1
+```
+
+- **L1-dcache-load-misses**: Level 1 data cache load misses. This gives you a measure of the memory load caused by the application, after some loads have been returned from the Level 1 cache. It can be compared with other L1 event counters to determine cache hit rate.
+- **LLC-load-misses**: Last level cache load misses. After the last level, this accesses main memory, and so this is a measure of main memory load. The difference between this and L1-dcache-load-misses gives an idea (other counters are needed for completeness) of the effectiveness of the CPU caches beyond Level 1.
+- **dTLB-load-misses**: Data translation lookaside buffer misses. This shows the effectiveness of the MMU to cache page mappings for the workload and can measure the size of the memory workload (working set).
+
+**Software Tracing**
+`perf record -e` can be used with various software instrumentation points for tracing activity of the kernel scheduler. These include software events and trace-point events (static probes), as listed by `perf list`. 
+
+The following example uses the context switch software event to trace when applications leave the CPU and collects call stacks for 10 s:
+```
+# perf record -f -g -a -e context-switches sleep 10
+...
+# perf report --stdio
+```
+
+More information can be found using the sched tracepoint events. Kernel sched- uler functions can also be traced directly using dynamic tracepoints (dynamic trac- ing).
+
+### Other Tools
+
+- **oprofile**: the original CPU profiling tool by John Levon.
+- **htop**: includes ASCII bar charts for CPU usage and has a more powerful interactive interface than the original top(1).
+- **atop**: includes many more system-wide statistics and uses process accounting to catch the presence of short-lived processes.
+- **/proc/cpuinfo**: This can be read to see processor details, including clock speed and feature flags.
+- **getdelays.c**: This is an example of delay accounting observability and includes CPU scheduler latency per process. 
+- **valgrind**: a memory debugging and profiling toolkit. It contains call-grind, a tool to trace function calls and gather a call graph, which can be visualized using kcachegrind; and cachegrind for analysis of hardware cache usage by a given program.
+
+### Visualizations
+
+## Experimentation
+
+When using these tools, it’s a good idea to leave mpstat(1) continually run- ning to confirm CPU usage and parallelism.
+
+### Ad Hoc
+This creates a single-threaded workload that is CPU-bound (“hot on one CPU”):
+```
+# while :; do :; done &
+```
+
+### SysBench
+
+The SysBench system benchmark suite has a simple CPU benchmark tool that cal- culates prime numbers. For example:
+```
+# sysbench --num-threads=8 --test=cpu --cpu-max-prime=100000 run
+```
+This executed eight threads, with a maximum prime number of 100,000. The run-time was 30.4 s, which can be used for comparison with the results from other sys- tems or configurations.
+
+## Tuning
+
+For CPUs, the biggest performance wins are typically those that eliminate unnec- essary work, which is an effective form of tuning.
+
+### Compiler Options
+Compile for 64-bit instead of 32-bit
+Select a level of optimizations.
+
+### Scheduling Priority and Class
+The range is from -20 to +19. For example:
+```
+$ nice -n 19 command
+```
+To change the priority of an already running process, use renice(1).
+chrt(1) command can show and set the scheduling priority directly, and the scheduling policy. The scheduling priority can also be set directly using the setpriority() syscall, and the priority and scheduling policy can be set using the sched_setscheduler() syscall.
+
+### Scheduler Options
+
+Example Linux Scheduler Config Option
+
+Option                          | Default|  Description
+--------------------------------|--------|------------------------------
+CONFIG_CGROUP_SCHED             |y       |  allows tasks to be grouped, allocating CPU time on a group basis
+CONFIG_FAIR_GROUP_SCHED         |y       |  allows CFS tasks to be grouped
+CONFIG_RT_GROUP_SCHED           |y       |  allows real-time tasks to be grouped
+CONFIG_SCHED_AUTOGROUP          | y      |  automatically identifies and creates task groups (e.g., build jobs)
+CONFIG_SCHED_SMT                |y      | hyperthreading support
+CONFIG_SCHED_MC                 |y      | multicore support
+CONFIG_HZ                       |1,000  | sets kernel clock rate (timer interrupt)                      
+CONFIG_NO_HZ                    |y      | tickless kernel behavior
+CONFIG_SCHED_HRTICK             |y      | use high-resolution timers
+CONFIG_PREEMPT                  |n      | full kernel preemption (exception of spin lock regions and interrupts)
+CONFIG_PREEMPT_NONE             |n      | no preemption
+CONFIG_PREEMPT_VOLUNTARY        |y      | preemption at voluntary kernel code points
+
+
+Some Linux kernels provide additional tunables (e.g., in /proc/sys/sched).
+
+### Process Binding
+
+A process may be bound to one or more CPUs, which may increase its performance by improving cache warmth and memory locality.
+On Linux, this is performed using the taskset(1) command, which can use a CPU mask or ranges to set CPU affinity. For example:
+```
+$ taskset -pc 7-10 10790
+pid 10790's current affinity list: 0-15 
+pid 10790's new affinity list: 7-10
+```
+
+### Exclusive CPU Sets
+
+Linux provides cpusets, which allow CPUs to be grouped and processes assigned to them.
+```
+# mkdir /dev/cpuset
+# mount -t cpuset cpuset /dev/cpuset 
+# cd /dev/cpuset
+# mkdir prodset               # create a cpuset called "prodset"
+# cd prodset
+# echo 7-10 > cpus            # assign CPUs 7-10
+# echo 1 > cpu_exclusive      # make prodset exclusive
+# echo 1159 > tasks           # assign PID 1159 to prodset
+```
+
+### Resource Controls
+Apart from associating processes with whole CPUs, modern operating systems pro- vide resource controls for fine-grained allocation of CPU usage.
+
+For Linux, there are container groups (`cgroups`), which can also control resource usage by processes or groups of processes. CPU usage can be controlled using shares, and the CFS scheduler allows fixed limits to be imposed (CPU band-width), in terms of allocating microseconds of CPU cycles per interval. 
+
+### Processor Options (BIOS Tuning)
+
+Processors typically provide settings to enable, disable, and tune processor-level features. On x86 systems, these are typically accessed via the BIOS settings menu at boot time.
+The settings usually provide maximum performance by default and don’t need to be adjusted. The most common reason I adjust these today is to disable Intel Turbo Boost, so that CPU benchmarks execute with a consistent clock rate (bearing in mind that, for production use, Turbo Boost should be enabled for slightly faster performance).
