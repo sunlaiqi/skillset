@@ -1,4 +1,7 @@
-
+- [Sorting](#sorting)
+  - [Quick sorting](#quick-sorting)
+    - [Principle](#principle)
+    - [Three implementation of sort](#three-implementation-of-sort)
 
 
 # Sorting
