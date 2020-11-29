@@ -5,6 +5,7 @@
   - [String Manipulationg](#string-manipulationg)
     - [Palindromic (回文) string](#palindromic-回文-string)
     - [Making Anagrams](#making-anagrams)
+    - [Find anagrams](#find-anagrams)
     - [Interconvert strings and integers](#interconvert-strings-and-integers)
     - [Base conversion](#base-conversion)
 
@@ -78,7 +79,7 @@ print(double_palindromic(s))
 # False
 ```
 
-From both ends of the string
+**From both ends of the string**
 
 ```python
 def is_palindrome(s):
@@ -96,6 +97,17 @@ def is_palindrome(s):
     return True
 ```
 we spend *O(1)* per character, so the time complexity is *O(n)*, where `n` is the length of `s`
+
+**Use collections.Counter**
+
+```python
+import collections
+def can_form_palindrome(s):
+    return sum(v % 2 for v in collections.Counter(s).values()) <= 1
+```
+
+The time complexity is *O(n)*, where `n` is the length of the string. The space complexity is *O(c)*, where `c` is the number of distinct characters appearing in the string.
+
 
 ### Making Anagrams
 
@@ -157,6 +169,35 @@ def make_anagram(a, b):
             sum += b1[key] 
     return sum
 ```
+
+### Find anagrams
+
+The function takes a `set` of words and returns groups of anagrams for those words. Each group must contain at least two words.
+For example, if the input is "debitcard", "elvis", "silent", "badcredit", "lives", "freedom", "listen", "levis", "money", then there are three groups of anagrams:
+(1) "debitcard", "badcredit"; (2)"elvis", "lives", "levis" (3)"silent", "listen"
+Note that "money" does not appear in any group since it has no anagram in the set.
+
+```python
+import collections
+def find_anagrams(dictionary):
+    sorted_string_to_anagrams = collections.defaultdict(list) 
+    for s in dictionary:
+        # Sorts the string, uses it as a key, and then appends the original 
+        # string as another value into hash table 
+        sorted_string_to_anagrams[''.join(sorted(s))].append(s)
+    return [
+        group for group in sorted_string_to_anagrams.values() if len(group) >= 2
+    ]
+
+dictionary = (
+    "debitcard", "elvis", "silent", "badcredit", "lives", "freedom", "listen", "levis", "money" 
+    )
+groups = find_anagrams(dictionary) 
+print(groups)
+# [['debitcard', 'badcredit'], ['elvis', 'lives', 'levis'], ['silent', 'listen']]
+```
+
+
 
 ### Interconvert strings and integers
 

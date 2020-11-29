@@ -135,7 +135,7 @@ def inorderTrav(subtree):
         inorderTrav(subtree.right)
 ```
 
-Postorder Traversal
+**Postorder Traversal**
 
 ```python
 def postorderTrav(subtree): 

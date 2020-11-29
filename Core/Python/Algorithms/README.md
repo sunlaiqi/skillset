@@ -162,13 +162,26 @@ And quicksort is faster in practice because it hits the average case way more of
 
 ## Hash tables
 
-Hash functions
+**Hash functions**
 A hash function is a function where you put in a string and you get back a number. In technical terminology, we’d say that a hash function “maps strings to numbers.” 
 
 Put a hash function and an array together, and you get a data structure called 
-a hash table. 
+a **hash table**. 
 
+Hash tables in Python are called dictionaries
+`book = dict() or book = {}`
 A hash table has keys and values. In the book hash, the names of produce are the keys, and their prices are the values. A hash table maps keys to values.
+
+Also, `set`, `collections.defaultdict` and `collections.Counter` are hash table based data structure.
+The difference between `set` and the other three is that is `set` simply stores keys, whereas the others store `key-value` pairs. All have the property that they do not allow for **duplicate keys**, unlike, for example, list.
+
+
+DNS uses hash tables for mapping hostname to IP address. Hash tables are used for caching for websites.
+
+The most important operations for set are `s.add(42)`, `s.remove(42)`, `s.discard(123)`, `x in s` as well as `s <= t `(is s a subset of t), and `s - t` (elements in s that are not in t).
+
+Note that the built-in `hash()` function can greatly simplify the implementation of a hash function for a user-defined class, i.e., implementing `__hash__( self)`.
+
 
 **Use cases**:
 Using hash tables for lookups, like phone book
@@ -178,13 +191,6 @@ Using hash tables as a cache
 **Collisions**
 
 The simplest one is this: if multiple keys map to the same slot, start a linked list at that slot.
-
-**Performance**
-
-In the average case, hash tables take O(1) for everything. O(1) is called constant time. 
-Getting an item out of an array takes constant time. It doesn’t matter how big your array is; it takes the same amount of time to get an element. 
-Look at the average case for hash tables. Hash tables are as fast as arrays at searching (getting a value at an index). And they’re as fast as linked lists 
-at inserts and deletes.
 
 To avoid collisions, you need
 • A low load factor
@@ -200,6 +206,17 @@ Resizing is expensive, and you don’t want to resize too often. But averaged ou
 
 A good hash function
 A good hash function distributes values in the array evenly.
+
+If the hash function does a good job of spreading objects across the underlying array and take O(1) time to compute, on average, lookups, insertions, and deletions have O(1 + n/m) time complexity, where n is the number of objects and m is the length of array.
+
+**Performance**
+
+In the average case, hash tables take `O(1)` for everything. O(1) is called constant time. 
+Getting an item out of an array takes constant time. It doesn’t matter how big your array is; it takes the same amount of time to get an element. 
+Look at the average case for hash tables. Hash tables are as fast as arrays at searching (getting a value at an index). And they’re as fast as linked lists at inserts and deletes.
+
+
+
 
 ## Breadth-first search
 

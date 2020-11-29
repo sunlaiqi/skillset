@@ -1,36 +1,41 @@
-- [List](#list)
-  - [List Slicing Tricks and the Sushi Operator](#list-slicing-tricks-and-the-sushi-operator)
-  - [Sort Complex Lists With sorted()](#sort-complex-lists-with-sorted)
-  - [Iterate With enumerate() Instead of range()](#iterate-with-enumerate-instead-of-range)
-- [String](#string)
-  - [Format strings With f-Strings](#format-strings-with-f-strings)
-  - [Access Common String Groups With string Constants](#access-common-string-groups-withstringconstants)
-- [Generator](#generator)
-  - [Save Memory With Generators](#save-memory-with-generators)
-- [itertools](#itertools)
-  - [Generate Permutations and Combinations With itertools](#generate-permutations-and-combinations-withitertools)
-- [Dictionary](#dictionary)
-  - [Dictionary Default Values](#dictionary-default-values)
-  - [How to merge two dicts](#how-to-merge-two-dicts)
-  - [Sort Dictionary](#sort-dictionary)
-    - [lexicographical ordering](#lexicographical-ordering)
-    - [key func in sorted](#key-func-in-sorted)
-  - [How to sort a dict descending by its value and then ascending (A-Z) by its key (alphabetically).](#how-to-sort-a-dict-descending-by-its-value-and-then-ascending-a-z-by-its-key-alphabetically)
-  - [Define Default Values in Dictionaries With .get() and .setdefault()](#define-default-values-in-dictionaries-with-get-and-setdefault)
-  - [Handle Missing Dictionary Keys With collections.defaultdict()](#handle-missing-dictionary-keys-withcollectionsdefaultdict)
-  - [Count Hashable Objects With collections.Counter](#count-hashable-objects-withcollectionscounter)
-  - [Emulating Switch/Case Statements With Dicts](#emulating-switchcase-statements-with-dicts)
-- [Some dict tricks](#some-dict-tricks)
-  - [Dictionary Pretty-Printing](#dictionary-pretty-printing)
-- [Functions](#functions)
-  - [Function argument unpacking](#function-argument-unpacking)
-  - [Measure the execution time of small bits of Python code with the "timeit" module](#measure-the-execution-time-of-small-bits-of-python-code-with-the-timeit-module)
-- [Debug](#debug)
-  - [Debug With breakpoint() Instead of print()](#debug-with-breakpoint-instead-of-print)
-- [Pythonic Productivity Techniques](#pythonic-productivity-techniques)
-  - [Isolating Project Dependencies With Virtualenv](#isolating-project-dependencies-with-virtualenv)
-  - [Peeking Behind the Bytecode Curtain](#peeking-behind-the-bytecode-curtain)
+- [Tricks and Tips](#tricks-and-tips)
+  - [List](#list)
+    - [List Slicing Tricks and the Sushi Operator](#list-slicing-tricks-and-the-sushi-operator)
+    - [Sort Complex Lists With sorted()](#sort-complex-lists-with-sorted)
+    - [Iterate With enumerate() Instead of range()](#iterate-with-enumerate-instead-of-range)
+  - [String](#string)
+    - [Format strings With f-Strings](#format-strings-with-f-strings)
+    - [Access Common String Groups With string Constants](#access-common-string-groups-withstringconstants)
+  - [Generator](#generator)
+    - [Save Memory With Generators](#save-memory-with-generators)
+  - [itertools](#itertools)
+    - [Generate Permutations and Combinations With itertools](#generate-permutations-and-combinations-withitertools)
+  - [Dictionary](#dictionary)
+    - [Dictionary Default Values](#dictionary-default-values)
+    - [How to merge two dicts](#how-to-merge-two-dicts)
+    - [Sort Dictionary](#sort-dictionary)
+      - [lexicographical ordering](#lexicographical-ordering)
+      - [key func in sorted](#key-func-in-sorted)
+    - [How to sort a dict descending by its value and then ascending (A-Z) by its key (alphabetically).](#how-to-sort-a-dict-descending-by-its-value-and-then-ascending-a-z-by-its-key-alphabetically)
+    - [Define Default Values in Dictionaries With .get() and .setdefault()](#define-default-values-in-dictionaries-with-get-and-setdefault)
+    - [Handle Missing Dictionary Keys With collections.defaultdict()](#handle-missing-dictionary-keys-withcollectionsdefaultdict)
+    - [Count Hashable Objects With collections.Counter](#count-hashable-objects-withcollectionscounter)
+    - [Emulating Switch/Case Statements With Dicts](#emulating-switchcase-statements-with-dicts)
+  - [Some dict tricks](#some-dict-tricks)
+    - [Dictionary Pretty-Printing](#dictionary-pretty-printing)
+  - [Functions](#functions)
+    - [Function argument unpacking](#function-argument-unpacking)
+    - [Measure the execution time of small bits of Python code with the "timeit" module](#measure-the-execution-time-of-small-bits-of-python-code-with-the-timeit-module)
+  - [Debug](#debug)
+    - [Debug With breakpoint() Instead of print()](#debug-with-breakpoint-instead-of-print)
+  - [Pythonic Productivity Techniques](#pythonic-productivity-techniques)
+    - [Isolating Project Dependencies With Virtualenv](#isolating-project-dependencies-with-virtualenv)
+    - [Peeking Behind the Bytecode Curtain](#peeking-behind-the-bytecode-curtain)
+  - [collections](#collections)
+    - [collections.defaultdict](#collectionsdefaultdict)
+    - [collections.Counter](#collectionscounter)
 
+# Tricks and Tips
 
 ## List
 
@@ -559,4 +564,159 @@ Use disassembler to make inspecting the bytecode easier.
               8 BINARY_ADD
              10 RETURN_VALUE
 >>> 
+```
+
+## collections
+
+### collections.defaultdict
+
+Returns a new dictionary-like object. defaultdict is a subclass of the built-in dict class.
+
+**The definition of defaultdict:**
+```python
+class collections.defaultdict([default_factory[, ...]])
+```
+The first argument provides the initial value for the `default_factory` attribute; it defaults to `None`.
+`default_factory`could be int, list, etc.
+
+
+In a dict, accessing value associated with a key that is not present leads to a KeyError exception. However, a collections.defaultdict retums the default value of the type that was specified when the collection was instantiated, e.g.,if 
+```python
+import collections
+a = {"a": [1,2,3], "b": [1,2]}
+d = collections.defaultdict(list)
+d["a"] = [1,2,3]
+d["b"] = [1]
+e = d["c"]
+print(f"The nonexist key in defaultdict: {e}")
+f = a["c"]
+```
+The result would be:
+
+```
+The nonexist key in defaultdict: []
+Traceback (most recent call last):
+  File "/Users/michael/Documents/mywriting/python.py", line 9, in <module>
+    f = a["c"]
+KeyError: 'c'
+```
+
+Setting the `default_factory` to `list`
+This technique is simpler and faster than an equivalent technique using `dict.setdefault()`
+
+```python
+import collections
+s = [('yellow', 1), ('blue', 2), ('yellow', 3), ('blue', 4), ('red', 1)]
+d = collections.defaultdict(list)
+for k, v in s:
+  d[k].append(v)
+print("Using collections.defaultdict(): ", d.items())
+# Using collections.defaultdict():  dict_items([('yellow', [1, 3]), ('blue', [2, 4]), ('red', [1])])
+```
+
+```python
+s = [('yellow', 1), ('blue', 2), ('yellow', 3), ('blue', 4), ('red', 1)]
+d = {}
+for k, v in s:
+  d.setdefault(k, []).append(v) 
+print("Using dict.setdefault(): ", d.items())
+# Using dict.setdefault():  dict_items([('yellow', [1, 3]), ('blue', [2, 4]), ('red', [1])])
+```
+
+Setting the `default_factory` to `int` makes the defaultdict useful for counting (like a bag or multiset in other languages):
+```python
+import collections
+s = 'mississippi'
+d = collections.defaultdict(int) 
+for k in s:
+    d[k] += 1
+print("default_factory = int: ", d.items())
+# default_factory = int:  dict_items([('m', 1), ('i', 4), ('s', 4), ('p', 2)])
+```
+
+Setting the `default_factory` to `set` makes the defaultdict useful for building a dictionary of sets:
+```python
+import collections
+s = [('red', 1), ('blue', 2), ('red', 3), ('blue', 4), ('red', 1), ('blue', 4)]
+d = collections.defaultdict(set)
+for k, v in s:
+    d[k].add(v)
+print("default_factory = set: ", d.items())
+# default_factory = set:  dict_items([('red', {1, 3}), ('blue', {2, 4})])
+```
+
+### collections.Counter
+
+**Definition**
+```python
+class collections.Counter([iterable-or-mapping])
+```
+
+A `Counter` is a dict subclass for counting hashable objects. It is an unordered collection where elements are stored as dictionary keys and their counts are stored as dictionary values. Counts are allowed to be any integer value including zero or negative counts. The `Counter` class is similar to `bags` or `multisets` in other languages.
+
+
+
+Elements are counted from an iterable or initialized from another mapping (or counter):
+```python
+>>> c = Counter() # a new, empty counter
+>>> c = Counter('gallahad')
+>>> c = Counter({'red': 4, 'blue': 2})
+>>> c = Counter(cats=4, dogs=8)
+```
+
+Counter objects have a dictionary interface except that they return a zero count for missing items instead of raising a KeyError:
+```python
+>>> c = Counter(['eggs', 'ham'])
+>>> c['bacon'] # count of a missing element is zero
+0
+```
+
+Setting a count to zero does not remove an element from a counter. Use del to remove it entirely:
+```python
+>>> c['sausage'] = 0 # counter entry with a zero count
+>>> del c['sausage'] # del actually removes the entry
+```
+
+
+A `collections.Counter` is used for counting the number of occurrences of keys, with a number of set like operations, as illustrated below.
+```python
+c = collections.Counter(a=3, b=1)
+d = collections.Counter(a=1, b=2)
+# add two counters together: c[x] + d[x], collections.Counter({‘a’: 4, ‘b’: 3}) 
+c + d
+# subtract (keeping only positive counts), collections.Counter({‘a’: 2})
+c - d
+# intersection: min(c[x], d[x]), collections.Counter({‘a’: 1, ‘b’: 1}) 
+# union: max(c[x], d[x]), collections.Counter({‘a’: 3, ‘b’: 2})
+c | d
+```
+
+Counter objects support three methods beyond those available for all dictionaries:
+
+**elements()**
+
+Return an iterator over elements repeating each as many times as its count. Elements are returned in arbitrary order. If an element’s count is less than one, elements() will ignore it.
+```python
+>>> c = Counter(a=4, b=2, c=0, d=-2)
+>>> list(c.elements())
+['a', 'a', 'a', 'a', 'b', 'b']
+```
+
+**most_common([n])**
+
+Return a list of the `n` most common elements and their counts from the most common to the least. If `n` is omitted or `None`, `most_common()` returns all elements in the counter. Elements with equal counts are ordered arbitrarily:
+```python
+>>> Counter('abracadabra').most_common(3)
+[('a', 5), ('r', 2), ('b', 2)]
+```
+
+**subtract([iterable-or-mapping])**
+
+Elements are subtracted from an iterable or from another mapping (or counter). Like `dict.update()` but subtracts counts instead of replacing them. Both inputs and outputs may be zero or negative.
+```python
+>>> c = Counter(a=4, b=2, c=0, d=-2) 
+>>> d = Counter(a=1, b=2, c=3, d=4) 
+>>> c.subtract(d)
+>>> c
+Counter({'a': 3, 'b': 0, 'c': -3, 'd': -6})
 ```
