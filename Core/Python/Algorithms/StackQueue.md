@@ -1,4 +1,7 @@
-
+- [Stacks and Queues](#stacks-and-queues)
+  - [Stacks boot camp](#stacks-boot-camp)
+  - [Know your stack libraries](#know-your-stack-libraries)
+  - [Implement a stack with max/min API](#implement-a-stack-with-maxmin-api)
 
 
 # Stacks and Queues
