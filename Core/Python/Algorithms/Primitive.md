@@ -18,7 +18,7 @@
 Operator    |Name            |Description
 ------------|----------------|---------------------------------------
 `&`           |AND             |Sets each bit to 1 if both bits are 1
-`|`           |OR              |Sets each bit to 1 if one of two bits is 1
+|           |OR              |Sets each bit to 1 if one of two bits is 1
 `^`           |XOR (circumflex)|Sets each bit to 1 if only one of two bits is 1
 `~`           |NOT (tilde)            |Inverts all the bits (~n = -n -1)
 `<<`          |Zero fill left shift   |Shift left by pushing zeros in from the right and let the leftmost bits fall off
