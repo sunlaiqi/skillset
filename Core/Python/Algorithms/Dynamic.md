@@ -1,4 +1,12 @@
-
+- [Dynamic programming](#dynamic-programming)
+  - [1. The knapsack problem](#1-the-knapsack-problem)
+  - [2. Longest common substring](#2-longest-common-substring)
+    - [Longest common subsequence (if longest common substring are in the same size)](#longest-common-subsequence-if-longest-common-substring-are-in-the-same-size)
+- [K-nearest neighbor (KNN)](#k-nearest-neighbor-knn)
+  - [Classifying orange vs. grapefruit](#classifying-orange-vs-grapefruit)
+  - [Building a recommendation system](#building-a-recommendation-system)
+    - [Regression](#regression)
+  - [Introduction to machine learning](#introduction-to-machine-learning)
 
 
 # Dynamic programming
