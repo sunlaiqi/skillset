@@ -1,5 +1,7 @@
 
-
+- [Greedy algorithm](#greedy-algorithm)
+  - [1. The set-covering problem](#1-the-set-covering-problem)
+  - [2. NP-complete problems](#2-np-complete-problems)
 
 
 # Greedy algorithm
