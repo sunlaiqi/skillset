@@ -4,8 +4,10 @@
     - [Find out there is a route between two nodes](#find-out-there-is-a-route-between-two-nodes)
     - [Find the shortest path using List](#find-the-shortest-path-using-list)
     - [Find the shortest path using Deque](#find-the-shortest-path-using-deque)
+    - [Traverse A Tree with BFS](#traverse-a-tree-with-bfs)
   - [Dijkstra’s algorithm (weighted graph)](#dijkstras-algorithm-weighted-graph)
     - [Implementation of Dijkstra’s algorithm](#implementation-of-dijkstras-algorithm)
+  - [Depth-first Search (DFS)](#depth-first-search-dfs)
 
 
 # Graphs
@@ -124,8 +126,9 @@ graph = {'A': ['B', 'C', 'E'],
         'G': ['C']}
 
 # Searched dict
+# Use dict for visited nodes, O(1)
 mark = {}
-
+# Initialize each visited node as “False”, meaning not yet visited
 for key in graph.keys():
     mark[key] = False
 
@@ -133,16 +136,20 @@ def search(graph, start, end):
     if start == end:
         return True
     
-    # Search queue
+    # Track of all the nodes along the way of search
     q = deque() 
-    # Searched: start 
+    # # Visited start node, mark it True
     mark[start] = True 
     # Put start into search queue
     q.append(start) 
+    # Looping the queue to check if there is a match
     while len(q) > 0:
+        # Pop the first node in the queue
         r = q.popleft() 
         if r is not None:
+            # Get all the children of the current node and push them into the queue
             for node in graph[r]: 
+                # Make sure we won’t cycle or repeat
                 if not mark[node]:
                     print(node)
                     if node == end:
@@ -319,6 +326,29 @@ Pathin Q:  deque([['D', 'B', 'A', 'C']])
 The shortest path:  ['D', 'B', 'A', 'C', 'G']
 ```
 
+### Traverse A Tree with BFS
+
+BFS is a bit less intuitive, many interviewees struggle with the implementation unless they are already familiar with it. The main tripping point is the (false) assumption that BFS is recursive. It’s not. Instead, it uses a queue.
+```python
+from collections import deque 
+
+def search(root):
+    queue = deque()
+    root.marked = True
+    
+    # add to the end of the queue 
+    queue.append(root) 
+    while len(queue) > 0:
+        # remove from the front of the queue 
+        r = queue.popleft() 
+        print(r)
+        for node in r.adjacent:
+            if not node.marked: 
+                node.marked = True 
+                queue.append(node)
+```
+If you are asked to implement BFS, the key thing to remember is the use of the queue.
+
 ## Dijkstra’s algorithm (weighted graph)
 
 
@@ -432,3 +462,25 @@ parents  :  {'a': 'b', 'b': 'start', 'fin': 'a'}
 shortest :  ['b', 'a', 'fin']
 allcosts :  6
 ```
+
+## Depth-first Search (DFS)
+
+In DFS, we visit a node `a` and then iterate through each of `a’s` neighbors. When visiting a node `b` that is a neighbor of a, we visit all of `b’s` neighbors before going on to `a’s` other neighbors. That is, a exhaustively searches `b’s` branch before any of its other neighbors.
+
+Note that pre-order and other forms of tree traversal are a form of DFS. The key difference is that when implementing this algorithm for a graph, we must check if the node has been visited. If we don’t, we risk getting stuck in an infinite loop.
+
+```python
+def search(root): 
+    if root is None:
+        return
+    
+    print(root)
+    root.visited = True
+
+    for node in root.adjacent:
+        if not node.visited: 
+            search(node)
+
+
+
+

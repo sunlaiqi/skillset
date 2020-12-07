@@ -1,3 +1,20 @@
+- [jq](#jq)
+  - [How to read /etc/fstab Line by line:](#how-to-read-etcfstab-line-by-line)
+  - [Delete paths:](#delete-paths)
+  - [Compose an array with string entries:](#compose-an-array-with-string-entries)
+  - [Read string entries with spaces in between from array:](#read-string-entries-with-spaces-in-between-from-array)
+  - [To process each key:value of each object: use |=](#to-process-each-keyvalue-of-each-object-use-)
+  - [Filter JSON by child object's key value:](#filter-json-by-child-objects-key-value)
+  - [Iteration](#iteration)
+  - [jq Functions](#jq-functions)
+  - [Creating objects](#creating-objects)
+  - [From a JSON file](#from-a-json-file)
+  - [In a chain of pipes](#in-a-chain-of-pipes)
+  - [Array](#array)
+  - [Useful functions](#useful-functions)
+
+
+# jq 
 
 ## How to read /etc/fstab Line by line:
 ```bash
@@ -55,8 +72,8 @@ foo
 bar
 ```
 
-Jq -r : to get rid of the extra quotes.
-Jq -c: (--compact-output) get each object one a newline
+`Jq -r` : to get rid of the extra quotes.
+`Jq -c`: (--compact-output) get each object one a newline
 
 We could start iterating of the above with a Bash for loop if our data does not contain spaces or newlines. But since certificates contain newlines we better base64 encode each line. Also, instead of -c, we now use -r to get rid of the extra quotes.
 ```bash
