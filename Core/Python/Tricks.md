@@ -507,8 +507,7 @@ If you’re using Python 3.7, you don’t need to import anything and can just c
 # Some complicated code with bugs
 breakpoint()
 ```
-Calling `breakpoint()` will put you into `pdb`, which is the default Python debugger. On Python 3.6 and older, you can do the same by
-importing pdb explicitly:
+Calling `breakpoint()` will put you into `pdb`, which is the default Python debugger. On Python 3.6 and older, you can do the same by importing pdb explicitly:
 ```python
 import pdb; pdb.set_trace()
 ```

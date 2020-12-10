@@ -1,4 +1,11 @@
+- [Decorator](#decorator)
+  - [What is iterator](#what-is-iterator)
+  - [Difference between iterable and iterator](#difference-between-iterable-and-iterator)
+    - [How do for-in loops work in Python?](#how-do-for-in-loops-work-in-python)
+  - [A Simpler Iterator Class](#a-simpler-iterator-class)
+  - [A realistic example for iterable class](#a-realistic-example-for-iterable-class)
 
+# Decorator
 
 ## What is iterator
 

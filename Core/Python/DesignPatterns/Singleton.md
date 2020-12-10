@@ -1,4 +1,4 @@
-
+- [Singleton Class](#singleton-class)
 
 
 # Singleton Class

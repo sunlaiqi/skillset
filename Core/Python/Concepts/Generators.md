@@ -1,3 +1,10 @@
+- [Generators Are Simplified Iterators](#generators-are-simplified-iterators)
+  - [Generator Object](#generator-object)
+    - [return vs yield](#return-vs-yield)
+  - [Generator Expressions](#generator-expressions)
+    - [Generator Expressions vs List Comprehensions](#generator-expressions-vs-list-comprehensions)
+    - [In-line Generator Expressions](#in-line-generator-expressions)
+  - [Iterator Chains](#iterator-chains)
 
 # Generators Are Simplified Iterators
 
