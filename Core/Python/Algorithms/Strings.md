@@ -25,8 +25,8 @@ s.endswith(suffix)
 s.split(‘,’)
 3 * '01'
 ','.join(('Gauss', 'Prince of Hathematicians', '1777-1855'))
-s.lowerO
-'Name {name}, Rank {rank}' .format(name='Archimedes', rank=3)
+s.lower()
+'Name {name}, Rank {rank}'.format(name='Archimedes', rank=3)
 ```
 
 ## Top tips for strings
