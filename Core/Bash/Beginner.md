@@ -1,6 +1,5 @@
 - [Exit code](#exit-code)
 - [positional arguments](#positional-arguments)
-- [array](#array)
 - [Debugging on the entire script](#debugging-on-the-entire-script)
 - [Regular Expression operators](#regular-expression-operators)
 - [Single and double quotes](#single-and-double-quotes)
@@ -66,11 +65,6 @@ Other special symbol
 - $$    parent pid of current instance
 - $!    pid of most recent background command
 - $_    absolute file name of the script
-
-
-
-
-# array
 
 # Debugging on the entire script
 
