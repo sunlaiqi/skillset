@@ -39,6 +39,7 @@
 - [The ENV File](#the-env-file)
 - [Command-Line Editing](#command-line-editing)
 - [Shell initialization files](#shell-initialization-files)
+- [Special Characters](#special-characters)
 
 
 # Tools
@@ -111,6 +112,163 @@ uniq in_file out_file
 ```
 $ sort names | uniq -d # List duplicate lines
 $ sort names | uniq –c # Count line occurrences 
+```
+
+# Variables and Parameters 
+
+## Variable Substitution 
+
+If `variable1` is the name of a variable, then `$variable1` is a **reference** to its value, the data item it contains. 
+
+The only times a variable appears "naked" -- without the `$ prefix` -- is 
+- when declared or assigned, 
+- when unset, 
+- when exported, 
+- in an arithmetic expression within double parentheses `(( ... ))`, or 
+- in the special case of a variable representing a signal. 
+- Assignment may be with an `=` (as in `var1=27`), in a read statement, and 
+- at the head of a loop `(for var2 in 1 2 3)`. 
+
+Partial quoting vs Full quoting
+
+- Enclosing a referenced value in double quotes (`" ... "`) does not interfere with variable substitution. This is called `partial quoting`, sometimes referred to as "`weak quoting`." 
+- Using single quotes (`' ... '`) causes the variable name to be used literally, and no substitution will take place. This is `full quoting`, sometimes referred to as '`strong quoting`.' 
+
+```bash
+hello="A B C D"
+# It is permissible to set multiple variables on the same line, 
+#+ if separated by white space.
+# Caution, this may reduce legibility, and may not be portable. 
+var1=21 var2=22 var3=$V3
+# Note that setting a variable to a null value is not the same as 
+#+ unsetting it, although the end result is the same (see below). 
+# Declaring, but not initializing it -- 
+#+ same as setting it to a null value, 
+# Escaping the whitespace also works. 
+mixed_bag=2\ ---\ Whatever
+#           ^    ^ Space after escape (\). 
+echo "$mixed_bag" # 2 --- Whatever 
+```
+An uninitialized variable has a "null" value -- no assigned value at all (not zero!). 
+```bash
+if [ -z "$unassigned" ] 
+then 
+	echo "\$unassigned is NULL." 
+fi # $unassigned is NULL. 
+```
+Using a variable before assigning a value to it may cause problems. It is nevertheless possible to perform arithmetic operations on an uninitialized variable. 
+```bash
+echo "$uninitialized" 		# (blank line)
+let "uninitialized += 5" 	# Add 5 to it.
+echo "$uninitialized" 		# 5
+
+# Conclusion:
+# An uninitialized variable has no value,
+#+ however it evaluates as 0 in an arithmetic operation. 
+```
+
+## Variable Assignment 
+
+`=`	the assignment operator (no space before and after)
+Do not confuse this with `=` and `-eq`, which test, rather than assign!
+Note that `=` can be either an assignment or a test operator, depending on context. 
+```bash
+# Assignment using 'let'let a=16+5
+# In a 'for' loop (really, a type of disguised assignment):
+echo -n "Values of \"a\" in the loop are: " 
+for a in 7 8 9 11
+do 
+	echo -n "$a " 
+done 
+# In a 'read' statement (also a type of assignment): 
+echo -n "Enter \"a\" "
+read a
+echo "The value of \"a\" is now $a." 
+a=`echo Hello!` # Assigns result of 'echo' command to 'a' ...
+echo $a
+# Note that including an exclamation mark (!) within a
+#+ command substitution construct will not work from the command-line, 
+#+ since this triggers the Bash "history mechanism." 
+# Inside a script, however, the history functions are disabled by default. 
+```
+```bash
+# a=`echo Hello!`
+-bash: !`: event not found
+```
+
+
+## Bash Variables Are Untyped 
+
+Essentially, Bash variables are **character strings**, but, depending on context, Bash permits arithmetic operations and comparisons on variables. **The determining factor is whether the value of a variable contains only digits.** 
+```bash
+a=2334
+let "a += 1" 
+echo "a = $a " 	# a = 2335
+b=${a/23/BB} 	# Substitute "BB" for “23".
+				# This transforms $b into a string.
+echo "b = $b" 	# b = BB35
+declare -i b 	# Declaring it an integer doesn't help. 
+echo "b = $b" 	# b = BB35 
+let "b += 1" 	# BB35 + 1
+echo "b = $b"	# b = 1			
+                # Bash sets the "integer value" of a string to 0. 
+c=BB34
+echo "c = $c" 	# c = BB34 
+d=${c/BB/23} 	# Substitute "23" for “BB".
+				# This makes $d an integer.
+echo "d = $d" 	# d = 2334
+let "d += 1" 	# 2334 + 1
+echo "d = $d"  	#d = 2335
+
+# What about null variables?
+e=''			# ... Or e="" ... Or e=
+echo "e = $e" 	#e =
+let "e += 1" 	# Arithmetic operations allowed on a null variable?
+echo "e = $e" 	#e= 1
+echo 			# Null variable transformed into an integer.
+
+# What about undeclared variables?
+echo "f = $f" 	#f =
+let "f += 1" 	# Arithmetic operations allowed?
+echo "f = $f" 	#f= 1
+echo 			# Undeclared variable transformed into an integer.
+#
+# However ...
+let "f /= $undecl_var" 	# Divide by zero?
+#let: f /= : syntax error: operand expected (error token is " ") 
+#Syntax error! Variable $undecl_var is not set to zero here! 
+#
+# But still …
+let "f /= 0"
+# let: f /= 0: division by 0 (error token is "0") 
+# Expected behavior. 
+```
+
+## Special Variable Types 
+```bash
+args=$#     # Number of args passed. 
+lastarg=${!args}    # Note: This is an *indirect reference* to $args ... 
+# Or: 
+lastarg=${!#} 
+# This is an *indirect reference* to the $# variable.
+# Note that lastarg=${!$#} doesn't work. 
+```
+If a script expects a command-line parameter but is invoked without one, this may cause a null variable assignment, generally an undesirable result. One way to prevent this is to append an extra character to both sides of the assignment statement using the expected positional parameter. 
+
+```bash
+variable1_=$1_ # Rather than variable1=$1
+# This will prevent an error, even if positional parameter is absent. 
+critical_argument01=$variable1_ 
+# The extra character can be stripped off later, like so. variable1=${variable1_/_/}
+# A more straightforward way of dealing with this is
+#+ to simply test whether expected positional parameters have been passed. 
+if [ -z $1 ]then 
+exit $E_MISSING_POS_PARAM 
+fi 
+# However, as Fabian Kreutz points out,
+#+ the above method may have unexpected side-effects. 
+# A better method is parameter substitution:
+# 	${1:-$DefaultVal}
 ```
 
 
@@ -567,3 +725,561 @@ Remember that the `read` built-in provides the `-a` option, which allows for rea
 
 
 The opposite effect is obtained using "`%`" and "`%%`", as in this example below. `WORD` should match a trailing portion of string: 
+
+
+# Special Characters 
+
+What makes a character special? If it has a meaning beyond its literal meaning, a meta-meaning, then we refer to it as a special character. 
+- `;`	**Command separator** [semicolon]. Permits putting two or more commands on the same line. 
+- `;;`	**Terminator** in a case option [double semicolon]. 
+- `;;&, ;&` 	**Terminators** in a case option (version 4+ of Bash).
+- `“`	**partial quoting** [double quote]. "STRING" preserves (from interpretation) most of the special characters within STRING. 
+- `‘`	**full quoting** [single quote]. 'STRING' preserves all special characters within STRING. This is a stronger form of quoting than "STRING". 
+- `,`	**comma operator**. The comma operator links together a series of arithmetic operations. All are evaluated, but only the last one is returned. 
+    ```bash
+    let "t2 = ((a = 9, 15 / 3))"# Set "a = 9" and "t2 = 15 / 3" 
+    ```
+    The `comma` operator can also concatenate strings. 
+    ```bash
+    for file in /{,usr/}bin/*calc
+    #.            ^ Find all executable files ending in "calc" 
+    #.              in /bin and /usr/bin directories. 
+    ```
+
+- `,, ,` 	**Lowercase conversion** in parameter substitution (added in version 4 of Bash). 
+- `\`	**escape** [backslash]. A quoting mechanism for single characters. 
+- `\X` **escapes the character** `X`. This has the effect of "quoting" X, equivalent to 'X'. The \ may be used to quote " and ', so they are expressed literally. 
+- \` 	**command substitution**. The \`command\` construct makes available the output of command for assignment to a variable. This is also known as backquotes or backticks. 
+- `:`	**null command** [colon]. This is the shell equivalent of a "NOP" (no op, a do-nothing operation). It may be considered a synonym for the shell builtin true. The ":" command is itself a Bash builtin, and its exit status is true (0). 
+    ```bash
+    :
+    echo $? 
+    # 0 
+    ```
+    - **Endless loop**: 
+        ```bash
+        while : 
+        do 
+        operation-1 
+        operation-2 
+        ... 
+        operation-n 
+        done 
+        ```
+    - Provide a placeholder where a binary operation is expected. 
+        ```bash
+        : ${username=`whoami`}
+        # ${username=`whoami`} Gives an error without the leading :
+        # unless "username" is a command or builtin... 
+        : ${1?"Usage: $0 ARGUMENT"} 
+        # bash: 1: Usage: /bin/bash ARGUMENT
+        ```
+    - Provide a placeholder where a command is expected in a `here document`. 
+    - Evaluate string of variables using parameter substitution 
+        ```bash
+        : ${HOSTNAME?} ${USER?} ${MAIL?}# Prints error message
+        #+ if one or more of essential environmental variables not set. 
+        # eg: bash: MAIL: parameter null or not set
+        ```
+    - **Variable expansion / substring replacement**. In combination with the `>` redirection operator, truncates a file to zero length, without changing its permissions. If the file did not previously exist, creates it. 
+        ```bash
+        : > data.xxx # File "data.xxx" now empty. 
+        # Same effect as cat /dev/null >data.xxx
+        # However, this does not fork a new process, since ":" is a builtin. 
+        ```
+        In combination with the `>>` redirection operator, has no effect on a pre-existing target file `(: >> target_file)`. If the file did not previously exist, creates it. 
+    - A colon is acceptable as a **function name**.   
+        ```bash
+        :() { 
+        echo "The name of this function is "$FUNCNAME" " 
+        # Why use a colon as a function name?# It's a way of obfuscating your code. 
+        }
+        :
+        # The name of this function is :
+        ```
+        This is not portable behavior, and therefore not a recommended practice. In fact, more recent releases of Bash do not permit this usage. An underscore `_` works, though. 
+- !	**reverse (or negate)** the sense of a test or exit status [bang]. The `!` operator inverts the exit status of the command to which it is applied. It also inverts the meaning of a test operator. This can, for example, change the sense of equal ( `=` ) to not-equal ( `!=` ). The `!` operator is a Bash keyword. 
+In a different context, the `!` also appears in *indirect variable references*. 
+The actual notation is `\$$var`, usually preceded by an `eval` (and sometimes an `echo`). This is called an indirect reference. 
+In yet another context, from the command line, the `!` invokes the Bash history mechanism. Note that within a script, the history mechanism is disabled. 
+- ?	**test operator**. Within certain expressions, the ? indicates a test for a condition. In a double-parentheses construct, the ? can serve as an element of a C-style *trinary operator*. 
+    ```bash
+    (( condition?result-if-true:result-if-false ))
+    ```
+    Notice the whitespaces after and before the double-parentheses.
+    In a parameter substitution expression, the ? tests whether a variable has been set. 
+- `$`	**end-of-line**. In a regular expression, a "`$`" addresses the end of a line of text. 
+    - `${ }`	Parameter substitution
+    - `$' ... '`	Quoted string expansion. This construct expands single or multiple escaped octal or hex values into ASCII or Unicode characters. 
+    - `$*`	All of the positional parameters, seen as a single word. `"$*"` must be quoted. 
+    - `$@` 	Same as `$*`, but each parameter is a quoted string, that is, the parameters are passed on intact, without interpretation or expansion. This means, among other things, that each parameter in the argument list is seen as a separate word. Of course, `"$@"` should be quoted.
+    - `$$` 	process ID variable. The `$$` variable holds the process ID of the script in which it appears. 
+- ( )	
+  - **command group**. 
+    ```bash
+    (a=hello; echo $a) 
+    # It doesn’t matter if there is whitespace next to parentheses 
+    ```
+    A listing of commands within parentheses starts a subshell. 
+    Variables inside parentheses, within the subshell, are not visible to the rest of the script. The parent process, the script, cannot read variables created in the child process, the subshell. 
+  - **array initialization**. 
+    ```bash
+    Array=(element1 element2 element3) 
+    ```
+- {xxx,yyy,zzz,...} 	**Brace expansion**. 
+    ```bash
+    echo \"{These,words,are,quoted}\"   # " prefix and suffix
+    # "These" "words" "are" "quoted"
+    cat {file1,file2,file3} > combined_file# Concatenates the files file1, file2, and file3 into combined_file. 
+    cp file22.{txt,backup}# Copies "file22.txt" to "file22.backup" 
+    ```
+    - A command may act upon a comma-separated list of file specs within braces. Filename expansion (globbing) applies to the file specs between the braces. 
+    - No spaces allowed within the braces unless the spaces are quoted or escaped. 
+        ```bash
+        echo {file1,file2}\ :{\ A," B",' C'}
+        # file1 : A file1 : B file1 : C file2 : A file2 : B file2 : C 
+        ```
+- {a..z} 	**Extended Brace expansion**. 
+    ```bash
+    echo {a..z} # a b c d e f g h i j k l m n o p q r s t u v w x y z # Echoes characters between a and z. 
+    echo {0..3} # 0 1 2 3# Echoes characters between 0 and 3. 
+    base64_charset=( {A..Z} {a..z} {0..9} + / = )# Initializing an array, using extended brace expansion. # From vladz's "base64.sh" example script. 
+    ```
+- {} 	**Block of code** [curly brackets]. Also referred to as an inline group, this construct, in effect, creates **an anonymous function** (a function without a name). However, unlike in a "standard" function, the variables inside a code block remain **visible** to the remainder of the script. 
+Unlike a command group within `(parentheses)`, as above, a code block enclosed by `{braces}` will not normally launch a subshell. 
+    ```bash
+    bash$ { local a; a=123; } 
+    bash: local: can only be used in a function
+
+    a=123
+    { a=321; }
+    echo "a = $a" # a = 321 (value inside code block) 
+    ```
+    - The code block enclosed in braces may have I/O redirected to and from it. 
+        ```bash
+        File=/etc/fstab 
+        {
+        read line1
+        read line2
+        } < $File
+
+        {
+        Command1
+        Command2
+        …
+        Commando
+        } > $AFILE # Redirects outputs of everything in the block to file
+        ```
+    - placeholder for text. Used after `xargs -i` (replace strings option). The `{}` double curly brackets are a placeholder for output text. 
+        ```bash
+        ls . | xargs -i -t cp ./{} $1 
+        #            ^^         ^^ 
+        ```
+- `{} \;`	**pathname**. Mostly used in find constructs. This is not a shell builtin. 
+The "`;`" ends the `-exec` option of a find command sequence. It needs to be escaped to protect it from interpretation by the shell. 
+- `[ ]` 	**test**. Test expression between `[ ]`. Note that `[` is part of the shell builtin test (and a synonym for it), not a link to the external command `/usr/bin/test`. 
+- `[[ ]]` 	**test**. Test expression between `[[ ]]`. More flexible than the single-bracket `[ ]` test, this is a shell keyword. 
+- `$[ ... ]` 	**integer expansion**. Evaluate integer expression between `$[ ]`. 
+- `(( ))` 		**integer expansion**. Expand and evaluate integer expression between `(( ))`. 
+- `> &> >& >> < <>` 	**redirection**. 
+    - `command &>filename` redirects both the stdout and the stderr of command to filename. 
+    - `command >&2` redirects stdout of command to stderr.
+    - `[i]<>filename` opens file filename for reading and writing, and assigns file descriptor `i` to it. If filename does not exist, it is created. 
+- **process substitution**. 
+    ```bash
+    (command)> 
+    <(command) 
+    ```
+    Piping the stdout of a command into the stdin of another is a powerful technique. But, what if you need to pipe the stdout of multiple commands? This is where process substitution comes in. 
+    Process substitution feeds the output of a process (or processes) into the stdin of another process.
+  - **Template** 
+    Command list enclosed within parentheses 
+    ```bash
+    >(command_list) 
+    <(command_list) 
+    ```
+    Process substitution uses `/dev/fd/<n>` files to send the results of the process(es) within parentheses to another process. There is no space between the the "<" or ">" and the parentheses. 
+- `<<` 	redirection used in a here document. 
+- `<<<` 	redirection used in a here string. 
+- `<, >` 	ASCII comparison. 
+- `\<, \>` 	word boundary in a regular expression. 
+- **pipe**. Passes the output (stdout) of a previous command to the input (stdin) of the next one, or to the shell. This is a method of chaining commands together. a classic method of interprocess communication, 
+The stdout of each process in a pipe must be read as the stdin of the next. If this is not the case, the data stream will block, and the pipe will not behave as expected. 
+    ```bash
+    cat file1 file2 | ls -l | sort
+    # The output from "cat file1 file2" disappears. 
+    ```
+    A pipe runs as a child process, and therefore cannot alter script variables. 
+- `>|` 	**force redirection** (even if the noclobber option is set). This will forcibly overwrite an existing file. 
+- `-`	**option, prefix**. Option flag for a command or filter. Prefix for an operator. Prefix for a default parameter in parameter substitution. 
+- `--`	**The double-dash** `--` prefixes long (verbatim) options to commands.Used with a Bash builtin, it means the end of options to that particular command. 
+This provides a handy means of removing files whose names begin with a dash. 
+    ```bash
+    bash$ ls -l-rw-r--r-- 1 bozo bozo 0 Nov 25 12:29 -badname 
+    bash$ rm -- -badname 
+    bash$ ls -l 
+    total 0 
+    ```
+    The double-dash is also used in conjunction with `set`. 
+    ```bash
+    set -- $variable
+    ```
+- `-`	**redirection from/to stdin or stdout** [dash]. 
+    ```bash
+    bash$ cat - abc
+    abc 
+    ... 
+    Ctl-D 
+    ```
+    Use `-` in `tar` command
+    ```
+    $ tar -cf - . |  (cd ../dest/directory; tar xpvf -)
+    ```
+    `tar cf - .`
+    The 'c' option 'tar' archiving command creates a new archive, the 'f' (file) option, followed by '-' designates the target file as stdout, and do it in current directory tree ('.'). 
+    `tar xpvf -`
+    Unarchive ('x'), preserve ownership and file permissions ('p'), and send verbose messages to stdout ('v'),reading data from stdin ('f' followed by '-'). 
+    Note that in this context the "-" is not itself a Bash operator, but rather an option recognized by certain UNIX utilities that write to stdout, such as `tar`, `cat`, etc. 
+    By itself on the command-line, file fails with an error message. 
+    Add a "-" for a more useful result. This causes the shell to await user input. 
+    ```bash
+    $ file -
+    abc
+    /dev/stdin: ASCII text
+    ```
+
+- `~+` 	**current working directory**. This corresponds to the `$PWD` internal variable. 
+    ```bash
+    $echo ~+ # (no $ prefix)
+    ```
+- `~-` 	**previous working directory**. This corresponds to the `$OLDPWD` internal variable. 
+- `=~` 	**regular expression match**. This operator was introduced with version 3 of Bash. 
+- `^, ^^` 	Uppercase conversion in parameter substitution (added in version 4 of Bash). 
+    ```bash
+    var=veryMixedUpVariable 
+    echo ${var}		# veryMixedUpVariable
+    echo ${var^}		# VeryMixedUpVariable
+    #         *		First char --> uppercase. 
+
+
+    echo ${var^^}		# VERYMIXEDUPVARIABLE 
+    #         **	All chars --> uppercase. 
+    echo ${var,}		# veryMixedUpVariable 
+    #         *		First char --> lowercase. 
+    echo ${var,,}		# verymixedupvariable 
+    #         **		All chars --> lowercase. 
+    ```
+- **Whitespace**		functions as a separator between commands and/or variables. Whitespace consists of either `spaces`, `tab`s, `blank lines`, or any combination thereof. 
+    - **Definition**: A field is a discrete chunk of data expressed as a string of consecutive characters. Separating each field from adjacent fields is either whitespace or some other designated character (often determined by the **$IFS**). In some contexts, a field may be called a record. 
+    UNIX filters can target and operate on whitespace using the POSIX character class `[:space:]`. 
+    `[:space:]` matches whitespace characters (space and horizontal tab).
+
+# Quoting 
+
+## Quoting Variables 
+
+When referencing a variable, it is generally advisable to enclose its name in double quotes. 
+```bash
+List="one two three" 
+for a in $List	# Splits the variable in parts at whitespace. 
+
+do
+  echo "$a"
+done
+# one
+# two
+# three
+echo "---" 
+for a in "$List"	# Preserves whitespace in a single variable. 
+do #     ^     ^
+  echo "$a"
+done
+# one two three
+
+variable2="" # Empty. 
+COMMAND $variable2 $variable2 $variable2
+# Executes COMMAND with no arguments. 
+COMMAND "$variable2" "$variable2" "$variable2"
+# Executes COMMAND with 3 empty arguments. 
+COMMAND "$variable2 $variable2 $variable2"
+# Executes COMMAND with 1 argument (2 spaces). 
+IFS='\' 
+echo $var 	# '(] {}$"	\ converted to space. Why? 
+echo "$var" 	# '(]\{}$"
+```
+
+## Escaping 
+
+Escaping is a method of **quoting single characters**. The escape (`\`) preceding a character tells the shell to interpret that character literally. 
+The `$' ... '` quoted string-expansion construct is a mechanism that uses escaped octal or hex values to assign ASCII characters to variables, e.g., `quote=$'\042'`. 
+```bash
+echo "\v\v\v\v" # Prints \v\v\v\v literally.
+# Use the -e option with 'echo' to print escaped characters. 
+echo "VERTICAL TABS"
+echo -e "\v\v\v\v" # Prints 4 vertical tabs. 
+echo "QUOTATION MARK"
+echo -e "\042" # Prints " (quote, octal ASCII character 42). 
+# The $'\X' construct makes the -e option unnecessary. 
+echo; echo "NEWLINE and (maybe) BEEP" echo $'\n' # Newline.
+echo $'\a' # Alert (beep). 
+# May only flash, not beep, depending on terminal. 
+# Assigning ASCII characters to a variable.
+# ----------------------------------------
+quote=$'\042' # " assigned to a variable.
+echo "$quote Quoted string $quote and this lies outside the quotes." 
+# " Quoted string " and this lies outside the quotes.
+# Concatenating ASCII chars in a variable. 
+triple_underline=$'\137\137\137'	# 137 is octal ASCII code for '_'. 
+echo "$triple_underline UNDERLINE $triple_underline" 
+# ___ UNDERLINE ___
+ABC=$'\101\102\103\010' # 101, 102, 103 are octal A, B, C. 
+echo $ABC 
+# ABC
+echo "\" 	# Invokes secondary prompt from the command-line. 
+> 
+# In a script, gives an error message. 
+
+variable=\
+echo "$variable" 
+	#  Will not work - gives an error message: 
+	#  test.sh: : command not found 
+	#  A "naked" escape cannot safely be assigned to a variable.
+```
+
+
+# Exit and Exit Status 
+When a script ends with an exit that has no parameter, the exit status of the script is the exit status of the last command executed in the script (previous to the exit). 
+
+The equivalent of a bare `exit` is `exit $?` or even just omitting the exit. 
+The `!`, the logical not qualifier, reverses the outcome of a test or command, and this affects its exit status. 
+```bash
+true # The "true" builtin.
+echo "exit status of \"true\" = $?" # 0 
+! true
+echo "exit status of \"! true\" = $?" # 1
+# Note that the "!" needs a space between it and the command.
+# !true leads to a "command not found" error
+#
+# The '!' operator prefixing a command invokes the Bash history mechanism. 
+true
+!true
+# No error this time, but no negation either. 
+# It just repeats the previous command (true). 
+```
+
+# Tests 
+
+Again, note that the exit status of an arithmetic expression is not an error value. 
+```bash
+var=-2 && (( var+=2 ))
+echo $? # 1 
+var=-2 && (( var+=2 )) && echo $var
+# Will not echo $var! 
+```
+```
+if [ -x "$filename" ]; then 
+```
+The `if test condition-true` construct is the exact equivalent of if `[ condition-true ]`. 
+As it happens, the left bracket, `[` , is a token which invokes the `test` command. The closing right bracket, `]` , in an if/test should not therefore be strictly necessary, however newer versions of Bash require it. 
+
+The `test` command is a Bash builtin which tests file types and compares strings. Therefore, in a Bash script, `test` does not call the external `/usr/bin/test` binary, which is part of the sh-utils package. Likewise, `[` does not call `/usr/bin/[`, which is linked to `/usr/bin/test`. 
+```bash
+bash$ type test
+test is a shell builtin 
+bash$ type '['
+[ is a shell builtin 
+bash$ type '[['
+[[ is a shell keyword 
+bash$ type ']]'
+]] is a shell keyword 
+bash$ type ']'
+bash: type: ]: not found 
+```
+
+**No filename expansion** or word splitting takes place between `[[` and `]]`, but there is parameter expansion and command substitution. 
+```bash
+file=/etc/passwd 
+if [[ -e $file ]] 
+then 
+	echo "Password file exists." 
+fi 
+```
+- Using the `[[ ... ]]` test construct, rather than `[ ... ]` can prevent many logic errors in scripts. For example, the `&&`, `||`, `<`, and `>` operators work within a `[[ ]]` test, despite giving an error within a `[ ]` construct. 
+- Arithmetic evaluation of `octal / hexadecimal` constants takes place automatically within a `[[ ... ]]` construct. 
+- Following an `if`, neither the `test` command nor the test brackets ( `[ ]` or `[[ ]]` ) are strictly necessary. 
+- The "`if COMMAND`" construct returns the exit status of `COMMAN`D. 
+- The `(( ))` construct expands and evaluates an arithmetic expression. If the expression evaluates as **zero**, it returns an **exit status of 1**, or "false". A non-zero expression returns an exit status of 0, or "true". This is in marked contrast to using the `test` and `[ ]` constructs previously discussed. 
+- 
+
+## Other Comparison Operators 
+
+- `<`	is less than (within double parentheses) 
+	`(("$a" < "$b"))`
+
+- string comparison 
+    - `=`   is equal to 
+        ```bash
+        if [ "$a" = "$b" ]
+        ```
+        Note the whitespace framing the =. 
+        ```bash
+        if [ "$a"="$b" ] 
+        ```
+        is not equivalent to the above. 
+    - `==`  is equal to
+        ```bash
+        if [ "$a" == "$b" ]
+        ```
+        This is a synonym for `=`. 
+
+    - `<` 	is less than, in ASCII alphabetical order
+        ```bash
+        if [[ "$a" < "$b" ]]
+        if [ "$a" \< "$b" ] 
+        ```
+    - `-z` 	string is null, that is, has zero length 
+    - `-n`	string is not null. 
+- compound comparison 
+    - -a
+    logical **and** 
+        ```bash
+        exp1 -a exp2 
+        ```
+        returns `true` if both exp1 and exp2 are `true`.
+    - -o 
+    logical **or**
+        ```bash
+        exp1 -o exp2 
+        ```
+        returns `true` if either exp1 or exp2 is `true`. 
+
+These are similar to the Bash comparison operators `&&` and `||`, used within double brackets. 
+`[[ condition1 && condition2 ]]` 
+
+# Operations and Related Topics 
+
+## Operators 
+
+Bash does not understand floating point arithmetic. It treats numbers containing a decimal point as strings. 
+
+```bash
+$ a=1.5 
+$ let "b = $a + 1.3" # Error.
+-bash: let: b = 1.5 + 1.3: syntax error: invalid arithmetic operator (error token is ".5 + 1.3")
+$ echo "b = $b"
+b = 
+```
+
+**bitwise operators**. 
+The bitwise operators seldom make an appearance in shell scripts. Their chief use seems to be manipulating and testing values read from ports or sockets. "Bit flipping" is more relevant to compiled languages, such as C and C++, which provide direct access to system hardware. 
+bitwise operators 
+
+- `<<`	bitwise left shift (multiplies by 2 for each shift position) 
+- `<<=`  	left-shift-equal 
+    ```bash
+    let "var <<= 2" 
+    ``
+    results in `var` left-shifted 2 bits (multiplied by 4) 
+- `>>` 	bitwise right shift (divides by 2 for each shift position) 
+- `>>=` 	right-shift-equal (inverse of <<=) 
+- `&`	bitwise AND 
+- `&=`	bitwise AND-equal 
+- `|`   bitwise OR 
+- `|=`	bitwise OR-equal 
+- `~`   bitwise NOT 
+- `^`   bitwise XOR 
+- `^=`	bitwise XOR-equal 
+
+**logical (boolean) operators**
+
+- `!`	NOT 
+    ```bash
+    if [ ! -f $FILENAME ] 
+    then 
+    ... 
+    ```
+- `&&`	AND 
+    ```bash
+    if [ $condition1 ] && [ $condition2 ]
+    # Same as: 
+    if [ $condition1 -a $condition2 ]
+    # Returns true if both condition1 and condition2 hold true... 
+    if [[ $condition1 && $condition2 ]] 
+    # Also works.
+    # Note that && operator not permitted inside brackets 
+    #+ of [ ... ] construct. 
+    ```
+
+- `||`	OR 
+    ```bash
+    if [ $condition1 ] || [ $condition2 ]
+    # Same as: 
+    if [ $condition1 -o $condition2 ]
+    # Returns true if either condition1 or condition2 holds true... 
+    if [[ $condition1 || $condition2 ]] 
+    # Also works.
+    # Note that || operator not permitted inside brackets 
+    #+ of a [ ... ] construct. 
+    ```
+
+The `&&` and `||` operators also find use in an arithmetic context.
+```bash 
+bash$ echo $(( 1 && 2 )) $((3 && 0)) $((4 || 0)) $((0 || 0)) 
+1 01 0 
+```
+
+**miscellaneous operators** 
+
+- `,`	Comma operator
+  The comma operator chains together two or more arithmetic operations. All the operations are evaluated (with possible side effects. 
+    ```bash
+    let "t1 = ((5 + 3, 7 - 1, 15 - 4))"
+    echo "t1 = $t1" ^^^^^^ 
+    # t1 = 11
+    # Here t1 is set to the result of the last operation. Why? 
+    let "t2 = ((a = 9, 15 / 3))" 
+    # Set "a" and calculate "t2". 
+    echo "t2 = $t2 a = $a" 
+    # t2 = 5 a = 9 
+    ```
+
+## Numerical Constants 
+
+- A shell script interprets a number as **decimal (base 10)**, unless that number has a special prefix or notation. 
+- A number preceded by a `0` is **octal (base 8)**. 
+- A number preceded by `0x` is **hexadecimal (base 16)**. 
+- A number with an embedded `#` evaluates as `BASE#NUMBER` (with range and notational restrictions). 
+    ```bash
+    # Octal: numbers preceded by '0' (zero) 
+    let "oct = 032"
+    echo "octal number = $oct"	
+    # 26
+    # Expresses result in decimal. 
+    # Hexadecimal: numbers preceded by '0x' or '0X' 
+    let "hex = 0x32"
+    echo "hexadecimal number = $hex" 
+    # 50 
+    echo $((0x9abc)) 
+    # 39612
+    # Other bases: BASE#NUMBER
+    #  BASE between 2 and 64. 
+    #  NUMBER must use symbols within the BASE range, see below. 
+    let "bin = 2#111100111001101" 
+    echo "binary number = $bin" 	
+    # 31181 
+    let "b32 = 32#77"
+    echo "base-32 number = $b32" 	
+    # 231 
+    let "b64 = 64#@_"
+    echo "base-64 number = $b64"	
+    # 4031
+    # This notation only works for a limited range (2 - 64) of ASCII characters. 
+    # 10 digits + 26 lowercase characters + 26 uppercase characters + @ + _ 
+    ```
+
+## The Double-Parentheses Construct 
+Similar to the `let` command, the `(( ... ))` construct permits arithmetic expansion and evaluation. In its simplest form, `a=$(( 5 + 3 ))` would set `a` to `5 + 3`, or `8`. However, this double-parentheses construct is also a mechanism for allowing C-style manipulation of variables in Bash, for example, `(( var++ ))`. 
+```bash
+(( t = a<45?7:11 )) # C-style trinary operator. 
+```
+
