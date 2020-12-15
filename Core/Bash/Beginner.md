@@ -520,7 +520,25 @@ Array variables may also be created using compound assignments in this format:
 ARRAY=(value1 value2 ... valueN)
 ```
 Remember that the `read` built-in provides the `-a` option, which allows for reading and assigning values for member variables of an array.
-
+```bash
+$ declare -a arr
+$ read -a arr
+one two three
+$ echo $arr
+one
+$ echo ${arr[*]}
+one two three
+$ echo ${#arr[*]}
+3
+$ echo ${arr[*]#one}
+two three
+echo ${arr[*]#t}
+one wo hree
+$ echo ${arr[*]#t*}
+one wo hree
+$ echo ${arr[*]##t*}
+one
+```
 In order to refer to the content of an item in an array, use **curly braces**. This is necessary, as you can see from the following example, to bypass the shell
 interpretation of expansion operators. If the index number is `@` or `*`, all members of an array are referenced.
 ```bash
@@ -537,8 +555,9 @@ one two three four
 ```
 Referring to the content of a member variable of an array without providing an index number is the same as referring to the content of the **first element**, the one referenced with **index number zero**.
 
-Deleting array variables
-The unset built-in is used to destroy arrays or member variables of an array:
+**Deleting array variables**
+
+The `unset` built-in is used to destroy arrays or member variables of an array:
 
 ## Operations on variables
 Using the `${#VAR}` syntax will calculate the number of characters in a variable. If VAR is "`*`" or "`@`", this value is substituted with the number of positional parameters or number of elements in an array in general.
@@ -789,3 +808,4 @@ Enter the while loop
 VARIABLE is being used here.
 + sleep 6
 ```
+
