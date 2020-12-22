@@ -52,6 +52,7 @@
   - [vscode config key based auth](#vscode-config-key-based-auth)
 - [Python tips](#python-tips)
   - [Split a string with multiple delimiters](#split-a-string-with-multiple-delimiters)
+- [Find command](#find-command)
 
 
 # git related
@@ -808,3 +809,25 @@ re.split(r'[;,\s]\s*', line) # Split with comma, semicolon and space
 
 # ['how', 'to', 'do', 'in', 'java', 'dot', 'com']
 ```
+
+# Find command
+
+**-exec**
+
+```
+find -exec COMMAND \;
+```
+
+```
+bash$ find ~/ -name '*.txt'
+```
+If `COMMAND` contains `{}`, then `find` substitutes the full path name of the selected file for "`{}`".
+```bash
+find ~/ -name 'core*' -exec rm {} \;
+# Removes all core dump files from user's home directory.
+```
+The `-exec` option to `find` should not be confused with the `exec` shell builtin.
+
+
+
+
