@@ -154,3 +154,16 @@ re.findall(pattern, string, flags=0)
 re.finditer(pattern, string, flags=0)
 re.subn(pattern, repl, string, count=0, flags=0)
 ```
+
+# Characters must be escaped
+
+```
+Brackets: []
+Parentheses: ()
+Curly braces: {}
+Operators: *, +, ?, |
+Anchors: ^, $
+Others: ., \
+In order to use a literal ^ at the start or a literal $ at the end of a regex, the character must be escaped.
+Some flavors only use ^ and $ as metacharacters when they are at the start or end of the regex respectively. In those flavors, no additional escaping is necessary. It's usually just best to escape them anyway.
+```
