@@ -22,6 +22,7 @@
   - [Why got permission denied using source command?](#why-got-permission-denied-using-source-command)
   - [How to loop over json to modify value of each orbject in jq](#how-to-loop-over-json-to-modify-value-of-each-orbject-in-jq)
   - [Add one item to an array of strings](#add-one-item-to-an-array-of-strings)
+  - [Here-string](#here-string)
 - [jq programming](#jq-programming)
   - [Compose a json data](#compose-a-json-data)
   - [Submit json data using curl](#submit-json-data-using-curl)
@@ -53,6 +54,9 @@
 - [Python tips](#python-tips)
   - [Split a string with multiple delimiters](#split-a-string-with-multiple-delimiters)
 - [Find command](#find-command)
+- [Bash Redirections Using Exec](#bash-redirections-using-exec)
+  - [Exec without a command](#exec-without-a-command)
+  - [Example to redirecting with exec](#example-to-redirecting-with-exec)
 
 
 # git related
@@ -412,6 +416,17 @@ $ VAR="hello world"
 $ echo ${VAR:3}
 lo world
 ```
+
+## Here-string
+
+A here-string is similar to a here-doc, but it consists of just one string (or several strings disguised as a single string with quotation marks):
+```
+$ cat <<< "foo bar baz"
+foo bar baz
+```
+
+
+
 # jq programming
 
 ## Compose a json data 
@@ -827,6 +842,168 @@ find ~/ -name 'core*' -exec rm {} \;
 # Removes all core dump files from user's home directory.
 ```
 The `-exec` option to `find` should not be confused with the `exec` shell builtin.
+
+# Bash Redirections Using Exec
+
+## Exec without a command
+
+Syntax:
+```
+exec [-cl] [-a name] [command [arguments]] [redirection ...]
+```
+Options:
+```
+c: It is used to execute the command with empty environment.
+a name: Used to pass a name as the zeroth argument of the command.
+l: Used to pass dash as the zeroth argument of the command.
+```
+
+`exec` command does not create a new process. When we run the exec command from the terminal, the ongoing terminal process is replaced by the command that is provided as the argument for the exec command.
+
+The exec command can be used in two modes:
+
+**Exec with a command as an argument**: 
+
+In the first mode, the exec tries to execute it as a command passing the remaining arguments, if any, to that command and managing the redirections, if any.
+`exec ls` will replce current `bash` which means after `exec ls`, it will exit from current `bash` because `ls` take over `bash` and `ls` exits.
+
+**Exec without a command as an argument**: 
+
+If no command is supplied, the redirections can be used to modify the current shell environment. This is useful as it allows us to change the file descriptors of the shell as per our desire. The process continues even after the exec command unlike the previous case but now the standard input, output, and error are modified according to the redirections.
+
+```
+:/tmp# bash
+root@laimeet:/tmp# exec > tmp_exec
+root@laimeet:/tmp# ls
+root@laimeet:/tmp# echo "This message will not be displayed"
+root@laimeet:/tmp# exit
+exit
+root@laimeet:/tmp# cat tmp_exec 
+actions.py
+Aegis-<Guid(5A2C30A2-A87D-490A-9281-6765EDAD7CBA)>
+<......>
+tmux-0
+trace.dat
+This message will not be displayed
+```
+
+## Example to redirecting with exec
+
+Redirecting I/O inside a bash script, redirecting your script's I/O once it has already started executing.
+
+As an example, let's say that you want to add a --log option to your script and if the user specifies it you want all the output to go to a log file rather than to the stdout. Of course, the user could simply redirect the output on the command line, but let's assume there's a reason why that option doesn't appeal to you. So, to provide this feature in your script you can do:
+
+```bash
+#!/bin/bash
+
+echo hello
+
+# Parse command line options.
+# Execute the following if --log is seen.
+if test -t 1; then
+    # Stdout is a terminal.
+    exec >log
+else
+    # Stdout is not a terminal, no logging.
+    false
+fi
+
+echo goodbye
+echo error >&2
+```
+Explain:
+- The if statement uses test to see if file descriptor **number one** is connected to a terminal (1 being the stdout). 
+  - If it is then the `exec` command re-opens it for writing on the file named `log`. 
+  - The `exec` command without a command but with redirections executes in the context of the current shell, it's the means by which you can open and close files and duplicate file descriptors. 
+  - If file descriptor number one is not on a terminal then we don't change anything.
+
+- If you run this command you'll see the first echo and the last echo are output to the terminal. 
+  - The first one happens before the redirection and 
+  - the second one is specifically redirected to stderr (2 being stderr). 
+
+So, how do you get stderr into the log file also? Just one simple change is required to the `exec` statement:
+
+```bash
+#!/bin/bash
+
+echo hello
+
+if test -t 1; then
+    # Stdout is a terminal.
+    exec >log 2>&1
+else
+    # Stdout is not a terminal, no logging.
+    false
+fi
+
+echo goodbye
+echo error >&2
+```
+Here the `exec` statement re-opens stdout on the log file and then re-opens stderr on the same thing that stdout is opened on (this is how you duplicate file descriptors, aka dup them). Note that order is important here: if you change the order and re-open stderr first (i.e. exec 2>&1 >log), then it will still be on the terminal since you're opening it on the same thing stdout is on and at this point it's still the terminal.
+
+Perhaps mainly as an exercise, let's try to do the same thing even if the output is not to the terminal. We can't do what we did above since re-opening stdout on the log file, when it's currently connected to a file redirection or to a pipeline, would break the redirection/pipeline that the user specified when the command was invoked.
+
+Given the following command as an example:
+```
+bash test.sh | grep good
+```
+What we want to do is manipulate things so that it appears that the following command was executed instead:
+```
+bash test.sh | tee log | grep good
+```
+Your first thought might be that you could change the exec statement to something like this:
+```
+exec | tee log &       # Won't work
+```
+and tell `exec` to re-open stdout on a background pipeline into `tee`, but that won't work (although bash doesn't complain about it). This just pipes `exec's` output to `tee`, and since `exec` doesn't produce any output in this instance, tee simply creates an empty file and exits.
+
+You might also think that you can try some dup-ing of file descriptors and start tee in the background with it taking input from and writing output to different file descriptors. And you can do that, but the problem is that there's no way to create a new process that has its standard input connected to a pipe so that we can insert it into the pipeline (although see the postscript at the end of this article). If we could do this, the standard output of the tee command would be easy since by default that goes to the same place the main script's output goes to, so we could just close the main script's output and connected it to our pipe (if we just had a way to create it).
+
+So are we at a dead end? Ahhhh no, that would be a different operating system you're thinking of. The solution is actually described in the last sentence of the previous paragraph. We just need a way to create a pipe, right? Well let's use named pipes.
+
+```bash
+#!/bin/bash
+
+echo hello
+
+if test -t 1; then
+    # Stdout is a terminal.
+    exec >log
+else
+    # Stdout is not a terminal.
+    npipe=/tmp/$$.tmp
+    trap "rm -f $npipe" EXIT
+    mknod $npipe p
+    tee <$npipe log &
+    exec 1>&-
+    exec 1>$npipe
+fi
+
+echo goodbye
+```
+- Here, if the script's stdout is not connected to the terminal, we create a named pipe (a pipe that exists in the file-system) using `mknod` and setup a `trap` to delete it on exit. 
+- Then we start `tee` in the background reading from the named pipe and writing to the log file. 
+  - Remember that `tee` is also writing anything that it reads on its stdin to its stdout. 
+  - Also remember that `tee's` stdout is also the same as the script's stdout (our main script, the one that invokes `tee`) 
+  - so the output from `tee's` stdout is going to go wherever our stdout is currently going (i.e. to the user's redirection or pipeline that was specified on the command line). 
+  - So at this point we have tee's output going where it needs to go: into the redirection/pipeline specified by the user.
+
+Now all we need is to get `tee` reading the right data. And since `tee` is reading from a named pipe all we need to do is redirect our stdout to the named pipe. 
+- We **close our current stdout** (with **exec 1>&-**) and 
+- re-open it on the named pipe (with **exec 1>$npipe**). 
+- Note that since `tee` is also writing to the redirection/pipeline that was specified on the command line, our closing the connection does not break anything.
+
+Now if you run the command and pipe it's output to grep as above you'll see the output in the termimal and it will also be saved in the log file.
+
+Many such journeys are possible, let the man page be your guide!
+
+p.s. There's another way to do this using Bash 4's coproc statement, but that'll wait for another time.
+
+
+
+
+
+
 
 
 
