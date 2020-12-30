@@ -34,6 +34,7 @@
   - [collections](#collections)
     - [collections.defaultdict](#collectionsdefaultdict)
     - [collections.Counter](#collectionscounter)
+  - [vars(), locals()](#vars-locals)
 
 # Tricks and Tips
 
@@ -719,3 +720,23 @@ Elements are subtracted from an iterable or from another mapping (or counter). L
 >>> c
 Counter({'a': 3, 'b': 0, 'c': -3, 'd': -6})
 ```
+
+## vars(), locals()
+
+`vars(object)`
+The method returns the` __dict__` attribute for a module, class, instance, or any other object if the same has a `__dict__` attribute. If the object fails to match the attribute, it raises a TypeError exception. Objects such as modules and instances have an updateable `__dict__` attribute however, other objects may have written restrictions on their `__dict__` attributes. `vars()` acts like `locals()` method when an empty argument is passed which implies that the locals dictionary is only useful for reads since updates to the locals dictionary are ignored.
+The `locals()` method updates and returns a dictionary of the current local symbol table.
+A symbol table is a data structure maintained by a compiler which contains all necessary information about the program.
+
+These include variable names, methods, classes, etc.
+
+There are mainly two kinds of symbol table.
+
+1. Global symbol table
+2. Local symbol table
+
+A Global symbol table stores all information related to the global scope of the program, and is accessed in Python using `globals()` method.
+The global scope contains all functions, variables which are not associated with any class or function.
+
+Likewise, Local symbol table stores all information related to the local scope of the program, and is accessed in Python using `locals()` method.
+The local scope could be within a function, within a class, etc.
