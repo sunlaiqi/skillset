@@ -1,4 +1,6 @@
 - [jq](#jq)
+  - [Keep key/value in nested json you want](#keep-keyvalue-in-nested-json-you-want)
+  - [Delete the key/value in nested json](#delete-the-keyvalue-in-nested-json)
   - [How to read /etc/fstab Line by line:](#how-to-read-etcfstab-line-by-line)
   - [Delete paths:](#delete-paths)
   - [Compose an array with string entries:](#compose-an-array-with-string-entries)
@@ -15,6 +17,72 @@
 
 
 # jq 
+
+## Keep key/value in nested json you want
+
+```bash
+jq '.[] |= {"size": .size, option: .option}'
+
+{
+    "/var":{
+        "filesystem": "ext3",
+        "size": 4,
+        "option": "h"
+    },
+        "/lv":{
+        "filesystem": "ext3",
+        "size": 6,
+        "option": "y"
+    }
+}
+
+===>
+
+{
+  "/var": {
+    "size": 4,
+    "option": "h"
+  },
+  "/lv": {
+    "size": 6,
+    "option": "y"
+  }
+}
+```
+
+## Delete the key/value in nested json 
+
+```bash
+jq '.[] |= del(.filesystem)'
+
+{
+    "/var":{
+        "filesystem": "ext3",
+        "size": 4,
+        "option": "h"
+    },
+        "/lv":{
+        "filesystem": "ext3",
+        "size": 6,
+        "option": "y"
+    }
+}
+
+==>
+
+{
+  "/var": {
+    "size": 4,
+    "option": "h"
+  },
+  "/lv": {
+    "size": 6,
+    "option": "y"
+  }
+}
+```
+
+
 
 ## How to read /etc/fstab Line by line:
 ```bash
