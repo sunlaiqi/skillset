@@ -5,6 +5,11 @@
   - [Delete paths:](#delete-paths)
   - [Compose an array with string entries:](#compose-an-array-with-string-entries)
   - [Read string entries with spaces in between from array:](#read-string-entries-with-spaces-in-between-from-array)
+  - [To extract keys from arrays and remove []](#to-extract-keys-from-arrays-and-remove-)
+  - [To delete keys "timestamp" and "report"](#to-delete-keys-timestamp-and-report)
+  - [To get values of the json:](#to-get-values-of-the-json)
+  - [To extract top level attributes "timestamp" and "report"](#to-extract-top-level-attributes-timestamp-and-report)
+  - [To obtain the specified keys from json](#to-obtain-the-specified-keys-from-json)
   - [To process each key:value of each object: use |=](#to-process-each-keyvalue-of-each-object-use-)
   - [Filter JSON by child object's key value:](#filter-json-by-child-objects-key-value)
   - [Iteration](#iteration)
@@ -152,7 +157,7 @@ eyJuYW1lIjoiZm9vIn0=
 eyJuYW1lIjoiYmFyIn0=
 ```
 
-- To extract keys from arrays and remove []
+## To extract keys from arrays and remove []
 ```bash
 jq 'keys | .[]'
 
@@ -171,7 +176,7 @@ jq 'keys | .[]'
     ]
 }
 ```
-- To delete keys "timestamp" and "report"
+## To delete keys "timestamp" and "report"
 ```bash
 $jq 'if has("timestamp") then del(.timestamp) else . end | if has("report") then del(.report) else . end'
 
@@ -196,7 +201,7 @@ $jq 'if .timestamp then del(.timestamp) else . end | if .report then del(.report
 }
 ```
 
-- To get values of the json:
+## To get values of the json:
 ```bash
 $jq '.[]'
 ```
@@ -218,7 +223,7 @@ $jq '.[]'
 ```
 
 
-- To extract top level attributes "timestamp" and "report"
+## To extract top level attributes "timestamp" and "report"
 ```bash
 $jq '{timestamp,report} |.[]'
 ```
@@ -234,7 +239,7 @@ $ echo '["xml", "yaml", "json"]' | jq '. - ["a", "b", "xml", "yaml"]'
 ]
 ```
 
-- To obtain the specified keys from json
+## To obtain the specified keys from json
 
 ```bash
 $ echo '{"xml": 1, "yaml": 2, "json": 3}' | jq 'keys | . - ["a", "b", "xml", "yaml"]'
