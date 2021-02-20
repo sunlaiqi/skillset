@@ -766,7 +766,7 @@ chown root /usr/{ucb/{ex,edit},lib/{ex?.?*,how_ex}}
 - If the tilde-prefix is ‘`~+`’, the value of the shell variable PWD replaces the tilde-prefix. 
 - If the tilde-prefix is ‘`~-`’, the value of the shell variable OLDPWD, if it is set, is substituted.
 
-If the characters following the tilde in the tilde-prefix consist of a number N, optionally prefixed by a ‘+’ or a ‘-’, the tilde-prefix is replaced with the corresponding element from the **directory stack**, as it would be displayed by the `dirs` builtin invoked with the characters following tilde in the tilde-prefix as an argument (see The Directory Stack). If the tilde-prefix, sans the tilde, consists of a number without a leading ‘+’ or ‘-’, ‘+’ is assumed.
+- If the characters following the tilde in the tilde-prefix consist of a number N, optionally prefixed by a ‘+’ or a ‘-’, the tilde-prefix is replaced with the corresponding element from the **directory stack**, as it would be displayed by the `dirs` builtin invoked with the characters following tilde in the tilde-prefix as an argument (see The Directory Stack). If the tilde-prefix, sans the tilde, consists of a number without a leading ‘+’ or ‘-’, ‘+’ is assumed.
 
 The following table shows how Bash treats unquoted tilde-prefixes:
 ```
