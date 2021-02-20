@@ -671,7 +671,7 @@ a b c
 ## 3.5 Shell Expansions
 
 Expansion is performed on the command line after it has been split into `tokens`. There are **seven** kinds of expansion performed:
-
+```
 - Brace Expansion	  	          Expansion of expressions within braces.
 - Tilde Expansion	  	          Expansion of the `~` character.
 - Shell Parameter Expansion	  	How Bash expands variables to their values.
@@ -681,7 +681,7 @@ Expansion is performed on the command line after it has been split into `tokens`
 - Word Splitting	  	          How the results of expansion are split into separate arguments.
 - Filename Expansion	  	      A shorthand for specifying filenames matching patterns.
 - Quote Removal	  	            How and when quote characters are removed from words.
-
+```
 The **order of expansions** is: brace expansion; tilde expansion, parameter and variable expansion, arithmetic expansion, and command substitution (done in a left-to-right fashion); word splitting; and filename expansion.
 
 On systems that can support it, there is an additional expansion available: **process substitution**. This is performed at the same time as tilde, parameter, variable, and arithmetic expansion and command substitution.
