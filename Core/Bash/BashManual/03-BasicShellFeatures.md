@@ -64,6 +64,24 @@
       - [3.5.8.1 Pattern Matching](#3581-pattern-matching)
     - [3.5.9 Quote Removal](#359-quote-removal)
   - [3.6 Redirections](#36-redirections)
+    - [3.6.1 Redirecting Input](#361-redirecting-input)
+    - [3.6.2 Redirecting Output](#362-redirecting-output)
+    - [3.6.3 Appending Redirected Output](#363-appending-redirected-output)
+    - [3.6.4 Redirecting Standard Output and Standard Error](#364-redirecting-standard-output-and-standard-error)
+    - [3.6.5 Appending Standard Output and Standard Error](#365-appending-standard-output-and-standard-error)
+    - [3.6.6 Here Documents](#366-here-documents)
+    - [3.6.7 Here Strings](#367-here-strings)
+    - [3.6.8 Duplicating File Descriptors](#368-duplicating-file-descriptors)
+    - [3.6.9 Moving File Descriptors](#369-moving-file-descriptors)
+    - [3.6.10 Opening File Descriptors for Reading and Writing](#3610-opening-file-descriptors-for-reading-and-writing)
+  - [3.7 Executing Commands](#37-executing-commands)
+    - [3.7.1 Simple Command Expansion](#371-simple-command-expansion)
+    - [3.7.2 Command Search and Execution](#372-command-search-and-execution)
+    - [3.7.3 Command Execution Environment](#373-command-execution-environment)
+    - [3.7.4 Environment](#374-environment)
+    - [3.7.5 Exit Status](#375-exit-status)
+    - [3.7.6 Signals](#376-signals)
+  - [3.8 Shell Scripts](#38-shell-scripts)
 
 
 # 3 Basic Shell Features
@@ -1289,18 +1307,391 @@ After the preceding expansions, all unquoted occurrences of the characters ‘\�
 
 ## 3.6 Redirections
 
+Redirections are processed in the order they appear, from left to right.
+
+Each redirection that may be preceded by **a file descriptor number** may instead be preceded by **a word of the form {varname}**. 
+- In this case, for each redirection operator except `>&-` and `<&-`, the shell will allocate a file descriptor greater than 10 and assign it to `{varname}`. 
+- If `>&-` or `<&-` is preceded by `{varname}`, the value of varname defines the file descriptor to close.
+- If `{varname}` is supplied, the redirection persists beyond the scope of the command, allowing the shell programmer to manage the file descriptor’s lifetime manually.
+
+In the following descriptions, if the file descriptor number is **omitted**, and the first character of the redirection operator is ‘<’, the redirection refers to the standard input (file descriptor 0). 
+If the first character of the redirection operator is ‘>’, the redirection refers to the standard output (file descriptor 1).
+
+The word following the redirection operator in the following descriptions, unless otherwise noted, is subjected to brace expansion, tilde expansion, parameter expansion, command substitution, arithmetic expansion, quote removal, filename expansion, and word splitting. If it expands to more than one word, Bash reports an error.
+
+Note that the order of redirections is significant. For example, the command
+```
+ls > dirlist 2>&1
+```
+directs both standard output (file descriptor 1) and standard error (file descriptor 2) to the file `dirlist`, while the command
+```
+ls 2>&1 > dirlist
+```
+directs only the standard output to file dirlist, because the standard error was made a copy of the standard output before the standard output was redirected to dirlist.
+
+Bash handles several filenames specially when they are used in redirections, as described in the following table. If the operating system on which Bash is running provides these special files, bash will use them; otherwise it will emulate them internally with the behavior described below.
+
+```
+/dev/fd/fd
+If fd is a valid integer, file descriptor fd is duplicated.
+
+/dev/stdin
+File descriptor 0 is duplicated.
+
+/dev/stdout
+File descriptor 1 is duplicated.
+
+/dev/stderr
+File descriptor 2 is duplicated.
+
+/dev/tcp/host/port
+If host is a valid hostname or Internet address, and port is an integer port number or service name, Bash attempts to open the corresponding TCP socket.
+
+/dev/udp/host/port
+If host is a valid hostname or Internet address, and port is an integer port number or service name, Bash attempts to open the corresponding UDP socket.
+```
+A failure to open or create a file causes the redirection to fail.
+
+Redirections using file descriptors greater than 9 should be used with care, as they may conflict with file descriptors the shell uses internally.
 
 
+The following script fetches the front page from Google:
+```
+exec 3<>/dev/tcp/www.google.com/80
+echo -e "GET / HTTP/1.1\r\nhost: http://www.google.com\r\nConnection: close\r\n\r\n" >&3
+cat <&3
+```
+The first line causes file descriptor 3 to be opened for reading and writing on the specified TCP/IP socket. This is a special form of the `exec` statement. From the bash man page:
+```
+exec [-cl] [-a name] [command [arguments]]
+```
+... If `command` is not specified, any redirections take effect in the current shell, and the return status is 0.
+So using `exec` without a command is a way to open files in the current shell.
+After the socket is open we send our HTTP request out the socket with the `echo ... >&3` command. 
+Next we read the response out of the socket using `cat <&3`, which reads the response and prints it out.
+
+Say I have a host on my network named skinner.
+```
+$ (echo > /dev/tcp/skinner/22) >/dev/null 2>&1 \
+    && echo "It's up" || echo "It's down"
+It's up
+
+$ (echo > /dev/tcp/skinner/222) >/dev/null 2>&1 && \
+    echo "It's up" || echo "It's down"
+It's down
+```
+
+The format for this test is as follows:
+```
+$ cat < /dev/tcp/<hostname_or_ip>/<port_number>
+```
+If the port is closed, the result will read as "No route to host" or "Connection refused". Example given:
+```
+$ cat < /dev/tcp/em-oel6-d2.bluemedora.localnet/99
+-bash: connect: Connection refused
+-bash: /dev/tcp/em-oel6-d2.bluemedora.localnet/99: Connection refused
+```
+If it is open, it will appear that nothing has happened. The connection is open and waiting for further commands. Do a ctrl-C to exit.
+```
+$ cat < /dev/tcp/em-oel6-d2.bluemedora.localnet/1521
+^C
+```
+
+### 3.6.1 Redirecting Input
+
+Redirection of input causes the file whose name results from the expansion of word to be opened for reading on file descriptor n, or the standard input (file descriptor 0) if n is not specified.
+
+The general format for redirecting input is:
+```
+[n]<word
+```
+```
+< file1
+```
+in a shell command instructs the shell to read input from a file called "file1" instead of from the keyboard.
+
+### 3.6.2 Redirecting Output
+
+Redirection of output causes the file whose name results from the expansion of word to be opened for writing on file descriptor n, or the standard output (file descriptor 1) if n is not specified. If the file does not exist it is created; if it does exist it is truncated to zero size.
+
+The general format for redirecting output is:
+```
+[n]>[|]word
+```
+If the redirection operator is ‘>’, and the `noclobber` option to the `set` builtin has been enabled, the redirection will fail if the file whose name results from the expansion of word exists and is a regular file. If the redirection operator is ‘>|’, or the redirection operator is ‘>’ and the `noclobber` option is not enabled, the redirection is attempted even if the file named by word exists.
+
+### 3.6.3 Appending Redirected Output
+
+Redirection of output in this fashion causes the file whose name results from the expansion of word to be opened for appending on file descriptor n, or the standard output (file descriptor 1) if n is not specified. If the file does not exist it is created.
+
+The general format for appending output is:
+```
+[n]>>word
+```
+
+### 3.6.4 Redirecting Standard Output and Standard Error
+
+This construct allows both the standard output (file descriptor 1) and the standard error output (file descriptor 2) to be redirected to the file whose name is the expansion of word.
+
+There are two formats for redirecting standard output and standard error:
+```
+&>word
+```
+and
+```
+>&word
+```
+Of the two forms, the first is preferred. This is semantically equivalent to
+```
+>word 2>&1
+```
+When using the second form, `word` may not expand to a number or ‘-’. If it does, other redirection operators apply (see Duplicating File Descriptors below) for compatibility reasons.
+
+### 3.6.5 Appending Standard Output and Standard Error
+
+This construct allows both the standard output (file descriptor 1) and the standard error output (file descriptor 2) to be appended to the file whose name is the expansion of word.
+
+The format for appending standard output and standard error is:
+```
+&>>word
+```
+This is semantically equivalent to
+```
+>>word 2>&1
+```
+(see Duplicating File Descriptors below).
+
+### 3.6.6 Here Documents
+
+This type of redirection instructs the shell to read input from the current source until a line containing only `word` (with no trailing blanks) is seen. All of the lines read up to that point are then used as the standard input (or file descriptor n if n is specified) for a command.
+
+The format of here-documents is:
+```
+[n]<<[-]word
+        here-document
+delimiter
+```
+No parameter and variable expansion, command substitution, arithmetic expansion, or filename expansion is performed on word. If any part of word is quoted, the delimiter is the result of quote removal on word, and the lines in the here-document are not expanded. If word is unquoted, all lines of the here-document are subjected to parameter expansion, command substitution, and arithmetic expansion, the character sequence \newline is ignored, and ‘\’ must be used to quote the characters ‘\’, ‘$’, and ‘`’.
+
+If the redirection operator is ‘<<-’, then all leading tab characters are stripped from input lines and the line containing delimiter. This allows here-documents within shell scripts to be indented in a natural fashion.
+
+### 3.6.7 Here Strings
+
+A variant of here documents, the format is:
+```
+[n]<<< word
+```
+The word undergoes tilde expansion, parameter and variable expansion, command substitution, arithmetic expansion, and quote removal. Filename expansion and word splitting are not performed. The result is supplied as a single string, with a newline appended, to the command on its standard input (or file descriptor n if n is specified).
+```
+COMMAND <<< $VAR
+```
+
+### 3.6.8 Duplicating File Descriptors
+
+The redirection operator
+```
+[n]<&word
+```
+is used to duplicate input file descriptors. If word expands to one or more digits, the file descriptor denoted by n is made to be a copy of that file descriptor. If the digits in word do not specify a file descriptor open for input, a redirection error occurs. If word evaluates to ‘-’, file descriptor n is closed. If n is not specified, the standard input (file descriptor 0) is used.
+
+The operator
+```
+[n]>&word
+```
+is used similarly to duplicate output file descriptors. If n is not specified, the standard output (file descriptor 1) is used. If the digits in word do not specify a file descriptor open for output, a redirection error occurs. If word evaluates to ‘-’, file descriptor n is closed. As a special case, if n is omitted, and word does not expand to one or more digits or ‘-’, the standard output and standard error are redirected as described previously.
 
 
+### 3.6.9 Moving File Descriptors
 
+The redirection operator
+```
+[n]<&digit-
+```
+moves the file descriptor digit to file descriptor n, or the standard input (file descriptor 0) if n is not specified. digit is closed after being duplicated to n.
 
+Similarly, the redirection operator
+```
+[n]>&digit-
+```
+moves the file descriptor digit to file descriptor n, or the standard output (file descriptor 1) if n is not specified.
 
+### 3.6.10 Opening File Descriptors for Reading and Writing
 
+The redirection operator
+```
+[n]<>word
+```
+causes the file whose name is the expansion of word to be opened for both reading and writing on file descriptor n, or on file descriptor 0 if n is not specified. If the file does not exist, it is created.
 
+## 3.7 Executing Commands
 
+### 3.7.1 Simple Command Expansion
 
+When a simple command is executed, the shell performs the following expansions, assignments, and redirections, from left to right, in the following order.
 
+1. The words that the parser has marked as **variable assignments** (those preceding the command name) and **redirections** are saved for later processing.
+2. The words that are not variable assignments or redirections are expanded (see Shell Expansions). If any words remain after expansion, the first word is taken to be the name of the command and the remaining words are the arguments.
+3. Redirections are performed as described above (see Redirections).
+4. The text after the ‘=’ in each variable assignment undergoes tilde expansion, parameter expansion, command substitution, arithmetic expansion, and quote removal before being assigned to the variable.
+
+-----------------
+- If no command name results, the variable assignments affect the current shell environment. 
+  - Otherwise, the variables are added to the environment of the executed command and do not affect the current shell environment. 
+  - If any of the assignments attempts to assign a value to a readonly variable, an error occurs, and the command exits with a non-zero status.
+
+- If no command name results, redirections are performed, but do not affect the current shell environment. A redirection error causes the command to exit with a non-zero status.
+
+- If there is a command name left after expansion, execution proceeds as described below. Otherwise, the command exits. 
+  - If one of the expansions contained a command substitution, the exit status of the command is the exit status of the last command substitution performed. 
+  - If there were no command substitutions, the command exits with a status of zero.
+
+### 3.7.2 Command Search and Execution
+
+After a command has been split into words, if it results in a simple command and an optional list of arguments, the following actions are taken.
+
+1. If the command name contains no slashes, the shell attempts to locate it. 
+   - If there exists a shell function by that name, that function is invoked as described in Shell Functions.
+2. If the name does not match a function, the shell searches for it in the list of shell builtins. If a match is found, that builtin is invoked.
+3. If the name is neither a shell function nor a builtin, and contains no slashes, Bash searches each element of `$PATH` for a directory containing an executable file by that name. 
+   - Bash uses a **hash table** to remember the full pathnames of executable files to avoid multiple PATH searches.
+   - A full search of the directories in `$PATH` is performed only if the command is not found in the hash table. 
+   - If the search is unsuccessful, the shell searches for a defined shell function named **command_not_found_handle**. 
+     - If that function exists, it is invoked in a separate execution environment with the original command and the original command’s arguments as its arguments, and the function’s exit status becomes the exit status of that subshell. 
+     - If that function is not defined, the shell prints an error message and returns an exit status of **127**.
+4. If the search is successful, or if the command name contains one or more slashes, the shell executes the named program in a separate execution environment. 
+   - Argument 0 is set to the name given, and the remaining arguments to the command are set to the arguments supplied, if any.
+5. If this execution fails because the file is not in executable format, and the file is not a directory, it is assumed to be a shell script and the shell executes it as described in Shell Scripts.
+6. If the command was not begun asynchronously, the shell waits for the command to complete and collects its exit status.
+
+### 3.7.3 Command Execution Environment
+
+The shell has an execution environment, which consists of the following:
+
+- open files inherited by the shell at invocation, as modified by redirections supplied to the `exec` builtin
+- the current working directory as set by `cd`, `pushd`, or `popd`, or inherited by the shell at invocation
+- the file creation mode mask as set by `umask` or inherited from the shell’s parent
+- current traps set by `trap`
+- shell parameters that are set by **variable assignment** or with `set` or inherited from the shell’s parent in the environment
+- shell functions defined during execution or inherited from the shell’s parent in the environment
+- options enabled at invocation (either by default or with command-line arguments) or by `set`
+- options enabled by `shopt` (see The Shopt Builtin)
+- shell aliases defined with `alias` (see Aliases)
+- various process IDs, including those of background jobs (see Lists), the value of `$$`, and the value of `$PPID`
+
+When a simple command other than a builtin or shell function is to be executed, it is invoked in a separate execution environment that consists of the following. Unless otherwise noted, the values are inherited from the shell.
+
+- the shell’s open files, plus any modifications and additions specified by redirections to the command
+- the current working directory
+- the file creation mode mask
+- shell variables and functions marked for export, along with variables exported for the command, passed in the environment (see Environment)
+- traps caught by the shell are reset to the values inherited from the shell’s parent, and traps ignored by the shell are ignored
+
+A command invoked in this separate environment cannot affect the shell’s execution environment.
+
+- Command substitution, commands grouped with parentheses, and asynchronous commands are invoked in a subshell environment that is a duplicate of the shell environment, except that **traps** caught by the shell are reset to the values that the shell inherited from its parent at invocation. 
+- Builtin commands that are invoked as part of a pipeline are also executed in a subshell environment. 
+- Changes made to the subshell environment cannot affect the shell’s execution environment.
+
+- Subshells spawned to execute command substitutions inherit the value of the `-e` option from the parent shell. When not in POSIX mode, Bash clears the `-e` option in such subshells.
+
+- If a command is followed by a ‘&’ and job control is not active, the default standard input for the command is the empty file `/dev/null`. 
+- Otherwise, the invoked command inherits the file descriptors of the calling shell as modified by redirections.
+
+### 3.7.4 Environment
+
+When a program is invoked it is given an array of strings called the environment. This is a list of **name-value** pairs, of the form **name=value**.
+
+Bash provides several ways to manipulate the environment. 
+- On invocation, the shell scans its own environment and creates a parameter for each name found, automatically marking it for `export` to child processes. 
+  - Executed commands inherit the environment. 
+- The `export` and ‘declare -x’ commands allow parameters and functions to be added to and deleted from the environment. 
+- If the value of a parameter in the environment is modified, the new value becomes part of the environment, replacing the old. 
+- The environment inherited by any executed command consists of 
+  - the shell’s initial environment, whose values may be modified in the shell, 
+  - less any pairs removed by the `unset` and ‘export -n’ commands, 
+  - plus any additions via the export and ‘declare -x’ commands.
+
+- The environment for any simple command or function may be augmented temporarily by **prefixing it with parameter assignments**, as described in Shell Parameters. These assignment statements affect only the environment seen by that command.
+
+- If the `-k` option is set (see The Set Builtin), then all parameter assignments are placed in the environment for a command, not just those that precede the command name.
+
+- When Bash invokes an external command, the variable ‘$_’ is set to the full pathname of the command and passed to that command in its environment.
+
+### 3.7.5 Exit Status
+
+- The exit status of an executed command is the value returned by the `waitpid` system call or equivalent function. 
+- Exit statuses fall between 0 and 255, though, as explained below, the shell may use values above 125 specially. 
+- Exit statuses from shell builtins and compound commands are also limited to this range. 
+- Under certain circumstances, the shell will use special values to indicate specific failure modes.
+
+For the shell’s purposes, a command which exits with a zero exit status has succeeded. A non-zero exit status indicates failure. 
+- This seemingly counter-intuitive scheme is used so there is one well-defined way to indicate success and a variety of ways to indicate various failure modes. 
+- When a command terminates on a **fatal signal** whose number is N, Bash uses the value 128+N as the exit status.
+
+- If a command is not found, the child process created to execute it returns a status of 127. 
+- If a command is found but is not executable, the return status is 126.
+
+- If a command fails because of an error during expansion or redirection, the exit status is greater than zero.
+
+- All builtins return an exit status of 2 to indicate incorrect usage, generally invalid options or missing arguments.
+
+### 3.7.6 Signals
+
+- When Bash is interactive, in the absence of any traps, 
+  - it ignores SIGTERM (so that ‘kill 0’ does not kill an interactive shell), 
+  - and SIGINT is caught and handled (so that the `wait` builtin is interruptible). 
+- When Bash receives a SIGINT, it breaks out of any executing loops. 
+- In all cases, Bash ignores SIGQUIT. 
+- If job control is in effect (see Job Control), Bash ignores SIGTTIN, SIGTTOU, and SIGTSTP.
+
+- Non-builtin commands started by Bash have signal handlers set to the values inherited by the shell from its parent. 
+  - When job control is not in effect, asynchronous commands ignore SIGINT and SIGQUIT in addition to these inherited handlers. 
+  - Commands run as a result of command substitution ignore the keyboard-generated job control signals SIGTTIN, SIGTTOU, and SIGTSTP.
+
+- The shell exits by default upon receipt of a SIGHUP. 
+  - Before exiting, an interactive shell resends the SIGHUP to all jobs, running or stopped. 
+    - Stopped jobs are sent SIGCONT to ensure that they receive the SIGHUP. 
+  - To prevent the shell from sending the SIGHUP signal to a particular job, it should be removed from the jobs table with the `disown` builtin (see Job Control Builtins) or marked to not receive SIGHUP using `disown -h`.
+
+- If the `huponexit` shell option has been set with `shopt` (see The Shopt Builtin), Bash sends a SIGHUP to all jobs when an interactive login shell exits.
+
+- If Bash is waiting for a command to complete and receives a signal for which a trap has been set, **the trap will not be executed until the command completes**. 
+- When Bash is waiting for an asynchronous command via the `wait` builtin, the reception of a signal for which a trap has been set will cause the `wait` builtin to return immediately with an exit status greater than 128, immediately after which the trap is executed.
+
+## 3.8 Shell Scripts
+
+A shell script is a text file containing shell commands. 
+- When such a file is used as the first non-option argument when invoking Bash, and neither the `-c` nor `-s` option is supplied (see Invoking Bash), Bash reads and executes commands from the file, then exits. 
+- This mode of operation creates a non-interactive shell. 
+- The shell first searches for the file in the current directory, and looks in the directories in `$PATH` if not found there.
+
+When Bash runs a shell script, 
+- **it sets the special parameter 0 to the name of the file**, rather than the name of the shell, 
+- and the positional parameters are set to the remaining arguments, if any are given. 
+- If no additional arguments are supplied, the positional parameters are unset.
+
+Bash spawns a subshell to execute a shell script. In other words, executing
+```
+filename arguments
+```
+is equivalent to executing
+```
+bash filename arguments
+```
+if `filename` is an executable shell script. 
+- This subshell reinitializes itself, so that the effect is as if a new shell had been invoked to interpret the script, 
+- with the exception that the locations of commands remembered by the parent are retained by the child.
+
+Most versions of Unix make this a part of the operating system’s command execution mechanism. 
+- If the first line of a script begins with the two characters ‘#!’, the remainder of the line specifies an interpreter for the program and, depending on the operating system, one or more optional arguments for that interpreter. 
+- Thus, you can specify Bash, awk, Perl, or some other interpreter and write the rest of the script file in that language.
+
+The arguments to the interpreter consist of one or more optional arguments following the interpreter name on the first line of the script file, followed by the name of the script file, followed by the rest of the arguments supplied to the script. 
+- Note that some older versions of Unix limit the interpreter name and a single argument to a maximum of 32 characters, so it’s not portable to assume that using more than one argument will work.
+
+Bash scripts often begin with `#!/bin/bash` (assuming that Bash has been installed in `/bin`), since this ensures that Bash will be used to interpret the script, even if it is executed under another shell. 
+- It’s a common idiom to use `env` to find bash even if it’s been installed in another directory: 
+  - `#!/usr/bin/env bash` will find the first occurrence of bash in $PATH.
 
 
 
