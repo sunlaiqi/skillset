@@ -36,6 +36,34 @@
     - [3.5.1 Brace Expansion](#351-brace-expansion)
     - [3.5.2 Tilde Expansion](#352-tilde-expansion)
     - [3.5.3 Shell Parameter Expansion](#353-shell-parameter-expansion)
+      - [${parameter:-word}](#parameter-word)
+      - [${parameter:?word}](#parameterword)
+      - [${parameter:+word}](#parameterword-1)
+      - [${parameter:offset}](#parameteroffset)
+      - [${parameter:offset:length}](#parameteroffsetlength)
+      - [${!prefix*} ???](#prefix-)
+      - [${!prefix@}](#prefix)
+      - [${!name[@]}](#name)
+      - [${!name[*]}](#name-1)
+      - [${#parameter}](#parameter)
+      - [${parameter#word}](#parameterword-2)
+      - [${parameter##word}](#parameterword-3)
+      - [${parameter%word}](#parameterword-4)
+      - [${parameter%%word}](#parameterword-5)
+      - [${parameter/pattern/string}](#parameterpatternstring)
+      - [${parameter^pattern}](#parameterpattern)
+      - [${parameter^^pattern}](#parameterpattern-1)
+      - [${parameter,pattern}](#parameterpattern-2)
+      - [${parameter,,pattern}](#parameterpattern-3)
+      - [${parameter@operator}](#parameteroperator)
+    - [3.5.4 Command Substitution](#354-command-substitution)
+    - [3.5.5 Arithmetic Expansion](#355-arithmetic-expansion)
+    - [3.5.6 Process Substitution](#356-process-substitution)
+    - [3.5.7 Word Splitting](#357-word-splitting)
+    - [3.5.8 Filename Expansion](#358-filename-expansion)
+      - [3.5.8.1 Pattern Matching](#3581-pattern-matching)
+    - [3.5.9 Quote Removal](#359-quote-removal)
+  - [3.6 Redirections](#36-redirections)
 
 
 # 3 Basic Shell Features
@@ -797,6 +825,483 @@ The string that would be displayed by ‘dirs -N’
 ```
 
 ### 3.5.3 Shell Parameter Expansion
+
+- The ‘`$`’ character introduces parameter expansion, command substitution, or arithmetic expansion. 
+- The basic form of parameter expansion is `${parameter}`. The value of `parameter` is substituted. 
+- If the first character of parameter is an exclamation point (`!`), and parameter is not a `nameref`, it introduces a level of **indirection**.
+  - Bash uses the value formed by expanding the rest of parameter as the new parameter; this is then expanded and that value is used in the rest of the expansion, rather than the expansion of the original parameter. This is known as **indirect expansion**. 
+  - The value is subject to tilde expansion, parameter expansion, command substitution, and arithmetic expansion. 
+  - If parameter is a `nameref`, this expands to the name of the variable referenced by parameter instead of performing the complete indirect expansion. 
+  - The exceptions to this are the expansions of `${!prefix*}` and `${!name[@]}` described below. 
+  - The exclamation point must immediately follow the left brace in order to introduce indirection.
+
+In each of the cases below, `word` is subject to tilde expansion, parameter expansion, command substitution, and arithmetic expansion.
+
+- When not performing substring expansion, using the form described below (e.g., ‘`:-`’), Bash tests for a parameter that is `unset` or `null`. 
+- Omitting the colon results in a test only for a parameter that is `unset`. 
+- Put another way, if the colon is included, the operator tests for both parameter’s **existence** and that its **value** is not null; if the colon is omitted, the operator tests only for **existence**.
+
+#### ${parameter:-word}
+If parameter is unset or null, the expansion of word is substituted. Otherwise, the value of parameter is substituted.
+
+#### ${parameter:?word}
+If parameter is null or unset, the expansion of `word` (or a message to that effect if word is not present) is written to the standard error and the shell, if it is not interactive, exits. Otherwise, the value of parameter is substituted.
+
+#### ${parameter:+word}
+If parameter is null or unset, nothing is substituted, otherwise the expansion of word is substituted.
+
+#### ${parameter:offset}
+#### ${parameter:offset:length}
+
+This is referred to as **Substring Expansion**. 
+- It expands to up to `length` characters of the value of parameter starting at the character specified by `offset`. 
+- If parameter is ‘`@`’, an indexed array subscripted by ‘`@`’ or ‘`*`’, or an associative array name, the results differ as described below. 
+- If `length` is omitted, it expands to the substring of the value of parameter starting at the character specified by `offset` and extending to the end of the value. 
+- `length` and `offset` are **arithmetic expressions** (see Shell Arithmetic).
+
+- If `offset` evaluates to a number less than zero, the value is used as an offset in characters from **the end of the value** of parameter. 
+- If `length` evaluates to a number less than zero, it is interpreted as an offset in characters from **the end of the value** of parameter rather than a number of characters, and the expansion is the characters between `offset` and that result. 
+- Note that a `negative offset` must be separated from the colon by **at least one space** to avoid being confused with the ‘`:-`’ expansion.
+
+Here are some examples illustrating substring expansion on parameters and subscripted arrays:
+```
+$ string=01234567890abcdefgh
+$ echo ${string:7}
+7890abcdefgh
+$ echo ${string:7:0}
+
+$ echo ${string:7:2}
+78
+$ echo ${string:7:-2}
+7890abcdef
+$ echo ${string: -7}
+bcdefgh
+$ echo ${string: -7:0}
+
+$ echo ${string: -7:2}
+bc
+$ echo ${string: -7:-2}
+bcdef
+$ set -- 01234567890abcdefgh # set $1
+$ echo ${1:7}
+7890abcdefgh
+$ echo ${1:7:0}
+
+$ echo ${1:7:2}
+78
+$ echo ${1:7:-2}
+7890abcdef
+$ echo ${1: -7}
+bcdefgh
+$ echo ${1: -7:0}
+
+$ echo ${1: -7:2}
+bc
+$ echo ${1: -7:-2}
+bcdef
+$ array[0]=01234567890abcdefgh
+$ echo ${array[0]:7}
+7890abcdefgh
+$ echo ${array[0]:7:0}
+
+$ echo ${array[0]:7:2}
+78
+$ echo ${array[0]:7:-2}
+7890abcdef
+$ echo ${array[0]: -7}
+bcdefgh
+$ echo ${array[0]: -7:0}
+
+$ echo ${array[0]: -7:2}
+bc
+$ echo ${array[0]: -7:-2}
+bcdef
+```
+
+If parameter is ‘`@`’, the result is `length` positional parameters beginning at `offset`. A `negative offset` is taken relative to one greater than the greatest positional parameter, so an `offset of -1` evaluates to **the last positional parameter**. It is an expansion error if `length` evaluates to a number less than zero.
+
+The following examples illustrate substring expansion using positional parameters:
+```
+$ set -- 1 2 3 4 5 6 7 8 9 0 a b c d e f g h
+$ echo ${@:7}
+7 8 9 0 a b c d e f g h
+$ echo ${@:7:0}
+
+$ echo ${@:7:2}
+7 8
+$ echo ${@:7:-2}
+bash: -2: substring expression < 0
+$ echo ${@: -7:2}
+b c
+$ echo ${@:0}
+./bash 1 2 3 4 5 6 7 8 9 0 a b c d e f g h
+$ echo ${@:0:2}
+./bash 1
+$ echo ${@: -7:0}
+```
+If parameter is an indexed array name subscripted by ‘`@`’ or ‘`*`’, the result is the `length` members of the array beginning with `${parameter[offset]}`. A negative `offset` is taken relative to one greater than the maximum index of the specified array. It is an expansion error if `length` evaluates to a number less than zero.
+
+These examples show how you can use substring expansion with indexed arrays:
+```
+$ array=(0 1 2 3 4 5 6 7 8 9 0 a b c d e f g h)
+$ echo ${array[@]}
+0 1 2 3 4 5 6 7 8 9 0 a b c d e f g h
+$ echo ${array[*]}
+0 1 2 3 4 5 6 7 8 9 0 a b c d e f g h
+
+$ echo ${array[@]:7}
+7 8 9 0 a b c d e f g h
+$ echo ${array[@]:7:2}
+7 8
+$ echo ${array[@]: -7:2}
+b c
+$ echo ${array[@]: -7:-2}
+bash: -2: substring expression < 0
+$ echo ${array[@]:0}
+0 1 2 3 4 5 6 7 8 9 0 a b c d e f g h
+$ echo ${array[@]:0:2}
+0 1
+$ echo ${array[@]: -7:0}
+```
+- Substring expansion applied to an associative array produces `undefined` results.
+
+- Substring indexing is zero-based unless the positional parameters are used, in which case the indexing starts at 1 by default. If offset is 0, and the positional parameters are used, $0 is prefixed to the list.
+
+
+#### ${!prefix*} ???
+#### ${!prefix@}
+Expands to the names of variables whose names begin with prefix, separated by the first character of the IFS special variable. When ‘@’ is used and the expansion appears within double quotes, each variable name expands to a separate word.
+
+#### ${!name[@]}
+#### ${!name[*]}
+If name is an array variable, expands to the list of array indices (keys) assigned in name. If name is not an array, expands to 0 if name is set and null otherwise. When ‘@’ is used and the expansion appears within double quotes, each key expands to a separate word.
+
+#### ${#parameter}
+The length in characters of the expanded value of parameter is substituted. 
+- If parameter is ‘`*`’ or ‘`@`’, the value substituted is the number of positional parameters. 
+- If parameter is an array name subscripted by ‘*’ or ‘@’, the value substituted is **the number of elements** in the array. 
+- If parameter is an indexed array name subscripted by a negative number, that number is interpreted as relative to one greater than the maximum index of parameter, so negative indices count back from the end of the array, and **an index of -1 references the last element**.
+
+```
+ubuntu@primary:/$ set -- 1 2 3 4 5 6 7 8 9 0 a b c d e f g h i j
+ubuntu@primary:/$ echo ${#*}
+20
+ubuntu@primary:/$ array=(0 1 2 3 4 5 6 7 8 9 0 a b c d e f g h)
+ubuntu@primary:/$ echo ${#array[@]}
+19
+ubuntu@primary:/$ echo ${array[-1]}
+h
+ubuntu@primary:/$ echo ${#array[-1]}
+1
+ubuntu@primary:/$ echo ${#array[1]}
+1
+```
+
+#### ${parameter#word}
+#### ${parameter##word}
+The `word` is expanded to produce a pattern and matched according to the rules described below (see Pattern Matching). 
+- If the pattern matches the beginning of the expanded value of parameter, then the result of the expansion is the expanded value of parameter with the shortest matching pattern (the ‘`#`’ case) or the longest matching pattern (the ‘`##`’ case) deleted. 
+- If parameter is ‘`@`’ or ‘`*`’, the pattern removal operation is applied to each positional parameter in turn, and the expansion is the resultant list. 
+- If parameter is an array variable subscripted with ‘`@`’ or ‘`*`’, the pattern removal operation is applied to each member of the array in turn, and the expansion is the resultant list.
+
+```
+ubuntu@primary:/$ testp=qwertyu
+ubuntu@primary:/$ echo ${testp#qwe}
+rtyu
+ubuntu@primary:/$ echo ${testp##qwe}
+rtyu
+```
+
+#### ${parameter%word}
+#### ${parameter%%word}
+The word is expanded to produce a pattern and matched according to the rules described below (see Pattern Matching). 
+- If the pattern matches a trailing portion of the expanded value of parameter, then the result of the expansion is the value of parameter with the shortest matching pattern (the ‘%’ case) or the longest matching pattern (the ‘%%’ case) deleted. 
+- If parameter is ‘`@`’ or ‘`*`’, the pattern removal operation is applied to each positional parameter in turn, and the expansion is the resultant list. 
+- If parameter is an array variable subscripted with ‘`@`’ or ‘`*`’, the pattern removal operation is applied to each member of the array in turn, and the expansion is the resultant list.
+
+```
+ubuntu@primary:/$ echo ${testp%qwe}
+qwertyu
+ubuntu@primary:/$ echo ${testp%tyu}
+qwer
+```
+
+#### ${parameter/pattern/string}
+- The pattern is expanded to produce a pattern just as in filename expansion. 
+- Parameter is expanded and the longest match of pattern against its value is replaced with string. 
+- The match is performed according to the rules described below (see Pattern Matching). 
+- If pattern begins with ‘`/`’, all matches of pattern are replaced with string. Normally only the first match is replaced. 
+- If pattern begins with ‘`#`’, it must match at the beginning of the expanded value of parameter. 
+- If pattern begins with ‘`%`’, it must match at the end of the expanded value of parameter. 
+- If string is null, matches of pattern are deleted and the `/` following pattern may be omitted. 
+- If the `nocasematch` shell option is enabled, the match is performed without regard to the case of alphabetic characters. 
+- If parameter is ‘`@`’ or ‘`*`’, the substitution operation is applied to each positional parameter in turn, and the expansion is the resultant list. 
+- If parameter is an array variable subscripted with ‘`@`’ or ‘`*`’, the substitution operation is applied to each member of the array in turn, and the expansion is the resultant list.
+
+#### ${parameter^pattern}
+#### ${parameter^^pattern}
+#### ${parameter,pattern}
+#### ${parameter,,pattern}
+- This expansion modifies the case of alphabetic characters in parameter. 
+- The pattern is expanded to produce a pattern just as in filename expansion. 
+- Each character in the expanded value of parameter is tested against pattern, and, if it matches the pattern, its case is converted. 
+- The pattern should not attempt to match more than one character. 
+- The ‘`^`’ operator converts lowercase letters matching pattern to uppercase; the ‘`,`’ operator converts matching uppercase letters to lowercase. The ‘`^^`’ and ‘`,,`’ expansions convert each matched character in the expanded value; the ‘`^`’ and ‘`,`’ expansions match and convert only the first character in the expanded value. 
+- If pattern is omitted, it is treated like a ‘`?`’, which matches every character. 
+- If parameter is ‘`@`’ or ‘`*`’, the case modification operation is applied to each positional parameter in turn, and the expansion is the resultant list. 
+- If parameter is an array variable subscripted with ‘`@`’ or ‘`*`’, the case modification operation is applied to each member of the array in turn, and the expansion is the resultant list.
+
+#### ${parameter@operator}
+The expansion is either a transformation of the value of parameter or information about parameter itself, depending on the value of operator. Each operator is a single letter:
+
+U
+The expansion is a string that is the value of parameter with lowercase alphabetic characters converted to uppercase.
+
+u
+The expansion is a string that is the value of parameter with the first character converted to uppercase, if it is alphabetic.
+
+L
+The expansion is a string that is the value of parameter with uppercase alphabetic characters converted to lowercase.
+
+Q
+The expansion is a string that is the value of parameter quoted in a format that can be reused as input.
+
+E
+The expansion is a string that is the value of parameter with backslash escape sequences expanded as with the $'…' quoting mechanism.
+
+P
+The expansion is a string that is the result of expanding the value of parameter as if it were a prompt string (see Controlling the Prompt).
+
+A
+The expansion is a string in the form of an assignment statement or declare command that, if evaluated, will recreate parameter with its attributes and value.
+
+K
+Produces a possibly-quoted version of the value of parameter, except that it prints the values of indexed and associative arrays as a sequence of quoted key-value pairs (see Arrays).
+
+a
+The expansion is a string consisting of flag values representing parameter’s attributes.
+
+- If parameter is ‘`@`’ or ‘`*`’, the operation is applied to each positional parameter in turn, and the expansion is the resultant list. 
+- If parameter is an array variable subscripted with ‘`@`’ or ‘`*`’, the operation is applied to each member of the array in turn, and the expansion is the resultant list.
+
+- The result of the expansion is subject to word splitting and filename expansion as described below.
+
+```
+ubuntu@primary:/$ foo="one\ntwo\n\tlast"
+ubuntu@primary:/$ echo ${foo}
+one\ntwo\n\tlast
+ubuntu@primary:/$ echo -e ${foo}
+one
+two
+	last
+
+ubuntu@primary:/$ echo ${foo@E}
+one two last
+ubuntu@primary:/$ echo "${foo@E}"
+one
+two
+	last
+
+ubuntu@primary:/$ echo ${foo@Q}
+'one\ntwo\n\tlast'
+ubuntu@primary:/$ echo -e ${foo@Q}
+'one
+two
+	last'
+
+$ foo=$(<file.txt)
+$ echo "${foo@Q}"
+$'line1\nline2'
+
+ubuntu@primary:/$ bar='host: \h'
+ubuntu@primary:/$ echo ${bar@P}
+host: primary
+
+$ foo="test1"
+$ echo ${foo@A}
+foo='test1'
+
+$ declare -i foo=10
+$ echo "${foo@A}"
+declare -i foo='10'
+
+$ declare -ir foo=10
+$ echo ${foo@a}
+ir
+
+
+```
+
+### 3.5.4 Command Substitution
+
+Command substitution allows the output of a command to replace the command itself. Command substitution occurs when a command is enclosed as follows:
+```bash
+$(command)
+```
+or
+```bash
+`command`
+```
+- Bash performs the expansion by executing command in a subshell environment and replacing the command substitution with the standard output of the command, with **any trailing newlines deleted**.
+- Embedded newlines are not deleted, but they may be removed during word splitting. 
+- The command substitution `$(cat file)` can be replaced by the equivalent but faster `$(< file)`.
+
+- When the old-style **backquote** form of substitution is used, backslash retains its literal meaning except when followed by ‘`$`’, '\`'(backquote), or ‘`\`’. The first backquote not preceded by a backslash terminates the command substitution. 
+- When using the `$(command)` form, all characters between the parentheses make up the command; none are treated specially.
+
+- Command substitutions may be nested. To nest when using the backquoted form, escape the inner backquotes with backslashes.
+
+- If the substitution appears within double quotes, word splitting and filename expansion are not performed on the results.
+
+### 3.5.5 Arithmetic Expansion
+
+Arithmetic expansion allows the evaluation of an arithmetic expression and the substitution of the result. The format for arithmetic expansion is:
+```bash
+$(( expression ))
+```
+
+- The expression is treated as if it were within **double quotes**, but a double quote inside the parentheses is not treated specially. 
+- All tokens in the expression undergo parameter and variable expansion, command substitution, and quote removal. 
+- The result is treated as the arithmetic expression to be evaluated. 
+- Arithmetic expansions may be nested.
+
+- The evaluation is performed according to the rules listed below (see Shell Arithmetic). 
+- If the expression is invalid, Bash prints a message indicating failure to the standard error and no substitution occurs.
+
+### 3.5.6 Process Substitution
+
+Process substitution allows a process’s input or output to be referred to using a filename. It takes the form of
+```bash
+<(list)
+```
+or
+```bash
+>(list)
+```
+
+- The process `list` is run asynchronously, and its input or output appears as a **filename**. 
+- This filename is passed as an **argument** to the current command as the result of the expansion. 
+- If the `>(list)` form is used, writing to the file will provide input for list. 
+- If the `<(list)` form is used, the file passed as an argument should be read to obtain the output of list. 
+- Note that **no space** may appear between the `<` or `>` and the left parenthesis, otherwise the construct would be interpreted as a **redirection**. 
+- Process substitution is supported on systems that support **named pipes** (FIFOs) or the `/dev/fd` method of naming open files.
+
+- When available, process substitution is performed simultaneously with parameter and variable expansion, command substitution, and arithmetic expansion.
+
+### 3.5.7 Word Splitting
+
+The shell scans the results of parameter expansion, command substitution, and arithmetic expansion that did not occur within double quotes for word splitting.
+
+- The shell treats each character of `$IFS` as a delimiter, and splits the results of the other expansions into words using these characters as field terminators. 
+- If IFS is unset, or its value is exactly `<space><tab><newline>`, the default, then sequences of `<space>, <tab>, and <newline>` at the beginning and end of the results of the previous expansions are ignored, and any sequence of IFS characters not at the beginning or end serves to delimit words. 
+- If IFS has a value other than the default, then sequences of the whitespace characters space, tab, and newline are ignored at the beginning and end of the word, as long as the whitespace character is in the value of IFS (an IFS whitespace character). 
+- Any character in IFS that is not IFS whitespace, along with any adjacent IFS whitespace characters, delimits a field. 
+- A sequence of IFS whitespace characters is also treated as a delimiter. 
+- If the value of IFS is null, no word splitting occurs.
+
+  - Explicit null arguments ("" or '') are retained and passed to commands as empty strings. 
+  - Unquoted implicit null arguments, resulting from the expansion of parameters that have no values, are removed. 
+  - If a parameter with no value is expanded within double quotes, a null argument results and is retained and passed to a command as an empty string. 
+  - When a quoted null argument appears as part of a word whose expansion is non-null, the null argument is removed. That is, the word `-d''` becomes `-d` after word splitting and null argument removal.
+
+Note that if **no expansion occurs, no splitting is performed**.
+
+### 3.5.8 Filename Expansion
+
+After word splitting, unless the `-f` option has been set (see The Set Builtin), Bash scans each word for the characters ‘`*`’, ‘`?`’, and ‘`[`’. 
+- If one of these characters appears, and is not quoted, then the word is regarded as a pattern, and replaced with an alphabetically sorted list of filenames matching the pattern (see Pattern Matching). 
+- If no matching filenames are found, and the shell option `nullglob` is disabled, the word is left unchanged. 
+- If the `nullglob` option is set, and no matches are found, the word is removed. 
+- If the `failglob` shell option is set, and no matches are found, an error message is printed and the command is not executed. 
+- If the shell option `nocaseglob` is enabled, the match is performed without regard to the case of alphabetic characters.
+
+When a pattern is used for filename expansion, the character ‘.’ at the start of a filename or immediately following a slash must be matched explicitly, unless the shell option `dotglob` is set. The filenames ‘.’ and ‘..’ must always be matched explicitly, even if dotglob is set. In other cases, the ‘.’ character is not treated specially.
+ 
+When matching a filename, the **slash** character must always be matched explicitly by a slash in the pattern, but in other matching contexts it can be matched by a special pattern character as described below (see Pattern Matching).
+
+The **GLOBIGNORE** shell variable may be used to restrict the set of file names matching a pattern. 
+- If GLOBIGNORE is set, each matching file name that also matches one of the patterns in GLOBIGNORE is removed from the list of matches. 
+- If the `nocaseglob` option is set, the matching against the patterns in GLOBIGNORE is performed without regard to case. 
+- The filenames `.` and `..` are always ignored when GLOBIGNORE is set and not null. 
+- However, setting GLOBIGNORE to a non-null value has the effect of enabling the `dotglob` shell option, so all other filenames beginning with a ‘.’ will match. 
+- To get the old behavior of ignoring filenames beginning with a ‘.’, make ‘.*’ one of the patterns in GLOBIGNORE. 
+- The `dotglob` option is disabled when GLOBIGNORE is unset.
+
+#### 3.5.8.1 Pattern Matching
+
+Any character that appears in a pattern, other than the special pattern characters described below, matches itself. The NUL character may not occur in a pattern. A backslash escapes the following character; the escaping backslash is discarded when matching. The special pattern characters must be quoted if they are to be matched literally.
+
+The special pattern characters have the following meanings:
+
+`*`
+Matches any string, including the null string. When the `globstar` shell option is enabled, and ‘`*`’ is used in a filename expansion context, two adjacent ‘`*`’s used as a single pattern will match all files and zero or more directories and subdirectories. If followed by a ‘/’, two adjacent ‘`*`’s will match only directories and subdirectories.
+
+`?`
+Matches any single character.
+
+`[…]`
+Matches any one of the enclosed characters. 
+- A pair of characters separated by a hyphen denotes a range expression; any character that falls between those two characters, inclusive, using the current locale’s collating sequence and character set, is matched. 
+- If the first character following the ‘[’ is a ‘!’ or a ‘^’ then any character not enclosed is matched. 
+- A ‘-’ may be matched by including it as the first or last character in the set. 
+- A ‘]’ may be matched by including it as the first character in the set. 
+- The sorting order of characters in range expressions is determined by the current locale and the values of the LC_COLLATE and LC_ALL shell variables, if set.
+
+  - For example, in the default C locale, ‘[a-dx-z]’ is equivalent to ‘[abcdxyz]’. 
+  - Many locales sort characters in dictionary order, and in these locales ‘[a-dx-z]’ is typically not equivalent to ‘[abcdxyz]’; it might be equivalent to ‘[aBbCcDdxXyYz]’, for example. 
+  - To obtain the traditional interpretation of ranges in bracket expressions, you can force the use of the C locale by setting the LC_COLLATE or LC_ALL environment variable to the value ‘C’, or enable the `globasciiranges` shell option.
+
+Within ‘[’ and ‘]’, character *classes* can be specified using the syntax `[:class:]`, where class is one of the following classes defined in the POSIX standard:
+```
+alnum   alpha   ascii   blank   cntrl   digit   graph   lower
+print   punct   space   upper   word    xdigit
+```
+- A character class matches any character belonging to that class. The `word` character class matches letters, digits, and the character ‘_’.
+- Within ‘[’ and ‘]’, an equivalence class can be specified using the syntax `[=c=]`, which matches all characters with the same **collation weight** (as defined by the current locale) as the character c.
+
+- Within ‘[’ and ‘]’, the syntax `[.symbol.]` matches the collating symbol symbol.
+
+But, what is collation?
+
+It is the way that characters get sorted, many times as a dictionary would sort them.
+
+If the `extglob` shell option is enabled using the `shopt` builtin, several extended pattern matching operators are recognized. In the following description, a pattern-list is a list of one or more patterns separated by a ‘|’. Composite patterns may be formed using one or more of the following sub-patterns:
+
+`?(pattern-list)`
+Matches zero or one occurrence of the given patterns.
+
+`*(pattern-list)`
+Matches zero or more occurrences of the given patterns.
+
+`+(pattern-list)`
+Matches one or more occurrences of the given patterns.
+
+`@(pattern-list)`
+Matches one of the given patterns.
+
+`!(pattern-list)`
+Matches anything except one of the given patterns.
+
+Complicated extended pattern matching against long strings is slow, especially when the patterns contain alternations and the strings contain multiple matches. Using separate matches against shorter strings, or using arrays of strings instead of a single long string, may be faster.
+
+### 3.5.9 Quote Removal
+After the preceding expansions, all unquoted occurrences of the characters ‘\’, ‘'’, and ‘"’ that did not result from one of the above expansions are removed.
+
+## 3.6 Redirections
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
