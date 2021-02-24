@@ -1008,6 +1008,10 @@ Remove each name from the list of aliases. If -a is supplied, all aliases are re
 
 ## 4.3 Modifying Shell Behavior
 
+`set` originates from the bourne shell (sh) and is part of the POSIX standard, `shopt` is however not and is bourne-again shell (bash) specific.
+
+
+
 ### 4.3.1 The Set Builtin
 
 `set` allows you to change the values of shell options and set the positional parameters, or to display the names and values of shell variables.
@@ -1224,7 +1228,7 @@ The return status is always zero unless an invalid option is supplied.
 
 This builtin allows you to change additional shell optional behavior.
 
-shopt
+**shopt**
 
 ```
 shopt [-pqsu] [-o] [optname …]
