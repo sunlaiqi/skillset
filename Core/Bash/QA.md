@@ -1,4 +1,5 @@
-
+- [Redirecting man page output to file results in double letters in words](#redirecting-man-page-output-to-file-results-in-double-letters-in-words)
+- [`$(...), (...), $((...)), ((...)), ${...}, {...}`](#-----)
 
 
 # Redirecting man page output to file results in double letters in words
