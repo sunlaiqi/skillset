@@ -14,6 +14,15 @@
 - [Redirection and file descriptors](#redirection-and-file-descriptors)
   - [Using /dev/fd](#using-devfd)
 - [Here documents](#here-documents)
+- [Globbing](#globbing)
+  - [Question mark – (?)](#question-mark--)
+  - [Asterisk – (*)](#asterisk--)
+  - [Square Bracket – ([])](#square-bracket--)
+  - [Caret – (^)](#caret--)
+  - [Exclamatory Sign – (!)](#exclamatory-sign--)
+  - [Dollar Sign – ($)](#dollar-sign--)
+  - [Curly bracket – ({})](#curly-bracket--)
+  - [Pipe– ( | )](#pipe---)
 - [Repetitive tasks](#repetitive-tasks)
   - [For loop](#for-loop)
   - [While loop](#while-loop)
@@ -55,52 +64,52 @@
 
 # positional arguments
 
-- $#    number of arguments
-- $*    all the arguments in a string "$1 $2..."
-- $@    all the arguments in a seperate quotes "$1" "$2" ...
+- `$#`    number of arguments
+- `$*`    all the arguments in a string "`$1 $2 ... `"
+- `$@`    all the arguments in a seperate quotes "`$1`" "`$2`" ...
 
 
 Other special symbol
 
-- $$    parent pid of current instance
-- $!    pid of most recent background command
-- $_    absolute file name of the script
+- `$$`    parent pid of current instance
+- `$!`    pid of most recent background command
+- `$_`    absolute file name of the script
 
 # Debugging on the entire script
 
 Bash provides extensive debugging features. The most common is to start up the subshell with the `-x `option, which will run the entire script in debug mode. Traces of each command plus its arguments are printed to standard output after the commands have been expanded but before they are executed.
 
-Using the set Bash built-in you can run in normal mode those portions of the script of which you are sure they are without fault, and display debugging information only for troublesome zones.
+Using the `set` Bash built-in you can run in normal mode those portions of the script of which you are sure they are without fault, and display debugging information only for troublesome zones.
 `set -x` # activate debugging from here
 
 `set +x` # stop debugging from here
 
-Use the -o option to set to display all shell options: 
+Use the `-o` option to set to display all shell options: 
 ```
 willy:~> set -o
 ```
 
 # Regular Expression operators
 
-- .	replaces any character
-- ^	matches start of string
-- $	matches end of string
-- *	matches up zero or more times the preceding character
-- \	Represent special characters
-- ()	Groups regular expressions
-- ?	Matches up exactly one character
-- + one or more times
-- {N}   exactly N times
-- {N,}  N or more times
+- `.`	replaces any character
+- `^`	matches start of string
+- `$`	matches end of string
+- `*`	matches up zero or more times the preceding character
+- `\`	Represent special characters
+- `()`	Groups regular expressions
+- `?`	Matches up exactly one character
+- `+` one or more times
+- `{N}`   exactly N times
+- `{N,}`  N or more times
 
 
 # Single and double quotes
 
-Single quotes
+**Single quotes**
 Single quotes ('') are used to preserve the literal value of each character enclosed within the quotes. 
 
-Double quotes
-Using double quotes the literal value of all characters enclosed is preserved, except for the dollar sign, the backticks (backward single quotes, ``) and the backslash.
+**Double quotes**
+Using double quotes the literal value of all characters enclosed is preserved, except for the **dollar sign**, the **backticks** (backward single quotes, ``) and the **backslash**.
 
 
 # Arithmetic expansion
@@ -121,21 +130,22 @@ echo $[365*24]
 ```
 
 # Conditional statements
-
+```
 if TEST-COMMANDS; then CONSEQUENT-COMMANDS; fi
+```
 
-- [ -a FILE ]   True if FILE exists.
-- [ -e FILE ]   True if FILE exists.
-- [ -f FILE ]   True if FILE exists and is a regular file.
-- [ -z STRING ] True of the length if “STRING” is zero.
-- [ -n STRING ] or [ STRING ]   True if the length of “STRING” is non-zero.
-- [ STRING1 == STRING2 ]    True if the strings are equal. “=“ may be used instead of “==“ for strict POSIX compliance.
-- [ STRING1 != STRING2 ]    True if the strings are not equal.
-- [ ARG1 OP ARG2 ]
+- `[ -a FILE ]`   True if FILE exists.
+- `[ -e FILE ]`   True if FILE exists.
+- `[ -f FILE ]`   True if FILE exists and is a regular file.
+- `[ -z STRING ]` True of the length if “STRING” is zero.
+- `[ -n STRING ]` or `[ STRING ]`   True if the length of “STRING” is non-zero.
+- `[ STRING1 == STRING2 ]`    True if the strings are equal. “=“ may be used instead of “==“ for strict POSIX compliance.
+- `[ STRING1 != STRING2 ]`    True if the strings are not equal.
+- `[ ARG1 OP ARG2 ]`
 “OP” is one of -eq, -ne, -lt, -le, -gt or -ge. These arithmetic binary operators return true if “ARG1” is equal to, not equal to, less than, less than or equal to, greater than, or greater than or equal to “ARG2”, respectively. “ARG1” and “ARG2” are integers.
-- [ ! EXPR ]    True if EXPR is false.
-- [ EXPR1 -a EXPR2 ]    True if both EXPR1 and EXPR2 are true.
-- [ EXPR1 -o EXPR2 ]    True if either EXPR1 or EXPR2 is true.
+- `[ ! EXPR ]`    True if EXPR is false.
+- `[ EXPR1 -a EXPR2 ]`    True if both EXPR1 and EXPR2 are true.
+- `[ EXPR1 -o EXPR2 ]`    True if either EXPR1 or EXPR2 is true.
 
 # String comparisons
 
@@ -169,7 +179,7 @@ If you invoke the exit in a subshell, it will not pass variables to the parent. 
 
 # Boolean operations AND OR
 
-The above script can be shortened using the Boolean operators "AND" (&&) and "OR" (||).
+The above script can be shortened using the Boolean operators "AND" (`&&`) and "OR" (`||`).
 
 # Using case statements
 ```bash
@@ -210,14 +220,14 @@ read [options] NAME1 NAME2 ... NAMEN
 
 # Redirection and file descriptors
 
-These numeric values are known as file descriptors. The best known file descriptors are stdin, stdout and stderr, with file descriptor numbers 0, 1 and 2, respectively.
+These numeric values are known as file descriptors. The best known file descriptors are **stdin**, **stdout** and **stderr**, with file descriptor numbers 0, 1 and 2, respectively.
 
 `&> FILE`
-This is the equivalent of > `FILE 2>&1`
+This is the equivalent of `> FILE 2>&1`
 
 ## Using /dev/fd
 
-The /dev/fd directory contains entries named 0, 1, 2, and so on. Opening the file /dev/fd/N is equivalent to duplicating file descriptor N. If your system provides /dev/stdin, /dev/stdout and /dev/stderr, you will see that these are equivalent to /dev/fd/0, /dev/fd/1 and /dev/ fd/2, respectively.
+The /dev/fd directory contains entries named 0, 1, 2, and so on. Opening the file /dev/fd/N is equivalent to duplicating file descriptor N. If your system provides `/dev/stdin`, `/dev/stdout` and `/dev/stderr`, you will see that these are equivalent to `/dev/fd/0`, `/dev/fd/1` and `/dev/fd/2`, respectively.
 
 
 # Here documents
@@ -239,7 +249,7 @@ echo "Starting $browser, please wait..."
 $browser &
 ```
 
-This is an example that installs a package automatically, eventhough you should normally confirm:
+This is an example that installs a package automatically, event hough you should normally confirm:
 
 ```bash
 #!/bin/bash
@@ -254,12 +264,99 @@ CONFIRM
 
 ```
 
+# Globbing
+
+Bash itself cannot recognize Regular Expressions. Inside scripts, it is commands and utilities -- such as `sed` and `awk` -- that interpret RE's.
+
+The Bash shell feature that is used for matching or expanding specific types of patterns is called **globbing**. Globbing is mainly used to *match filenames* or *searching for content* in a file. Globbing uses **wildcard** characters to create the pattern. The wildcard characters include `*` and `?`, character lists in **square brackets**, and certain other special characters (such as `^` for negating the sense of a match). 
+
+There are important limitations on wild card characters in globbing, however. Strings containing `*` will not match filenames that start with a dot, as, for example, `.bashrc`. Likewise, the `?` has a different meaning in globbing than as part of an RE.
+
+## Question mark – (?)
+‘`?`’ is used to match any single character. You can use ‘`?`’ for multiple times for matching multiple characters.
+
+## Asterisk – (*)
+‘`*`’ is used to match zero or more characters. If you have less information to search any file or information then you can use ‘`*`’ in globbing pattern.
+
+## Square Bracket – ([])
+‘`[]`’ is used to match the character from the range. Some of the mostly used range declarations are mentioned below.
+
+All uppercase alphabets are defined by the range as, `[:upper:]` or `[A-Z]` .
+
+All lowercase alphabets are defined by the range as, `[:lower:]` or `[a-z]`.
+
+All numeric digits are defined by the range as, `[:digit:]` or `[0-9]`.
+
+All uppercase and lower alphabets are defined by the range as, `[:alpha:]` or `[a-zA-z]`.
+
+All uppercase alphabets, lowercase alphabet and digits are defined by the range as, `[:alnum:]` or `[a-zA-Z0-9]`
+
+Run the following command to search all files and folders whose name contains p or q or r or s.
+```
+$ ls -l [p-s]*
+```
+Run the following command to search all files and folders whose name starts with any digit from 1 to 5.
+```
+$ ls -l [1-5]*
+```
+
+## Caret – (^)
+You can use ‘^’ with square bracket to define globbing pattern more specifically. ‘^’ can be used inside or outside of square bracket. 
+- ‘^’ is used outside the square bracket to search those contents of the file that starts with a given range of characters. 
+- ‘^’ is used inside the square bracket to show all content of the file by highlighting the lines start with a given range of characters . 
+- You can use different types of globbing patterns for searching particular content from a file. ‘grep’ command is used for content searching in bash. Suppose, you have a text file named ‘list.txt’ with the following content. Test the following examples for that file.
+
+Run the following command to search those lines from list.txt file that starts with P or Q or R.
+```
+$ grep '^[P-R]' list.txt
+```
+Run the following command to highlight those lines from list.txt file that starts with A or B or C.
+```
+$ grep '[^A-C]' list.txt
+```
+
+## Exclamatory Sign – (!)
+You can use ‘!’ inside the range pattern. It works same as the use of ‘^’ symbol outside the range pattern. Some examples of using ‘!’ sign are given below.
+
+Run the following command to show those lines from list.txt file that starts with ‘P’ or Q or R.
+```
+$ grep [!P-R] list.txt
+```
+
+## Dollar Sign – ($)
+‘`$`’ is used to define the ending character. If you know want to search information based on last character then you can use ‘`$`’ in globbing pattern.
+
+Run the following command to search those lines from list.txt file that ends with ‘a’.
+```
+$ grep a$ list.txt
+```
+Run the following command to search those lines from list.txt file that end with the number 50.
+```
+$ grep 50$ list.txt
+```
+
+## Curly bracket – ({})
+‘{}’ can be used to match filenames with more than one globbing patterns. Each pattern is separated by ‘,’ in curly bracket without any space. Some examples are given below.
+
+Run the following command to search those files whose names are 5 characters long and the extension is ‘sh’ or the last two characters of the files are ‘st’ and the extension is ‘txt’.
+```
+$ ls -l {?????.sh,*st.txt}
+```
+
+## Pipe– ( | )
+‘|’ sign is also used for applying more than one condition on globbing pattern. Each pattern is separated by ‘|’ symbol in the command.
+
+Run the following command to search those filenames which are starting with character ‘a’ and has the extension ‘bash’ or ‘sh’.
+```
+$ ls a*+(.bash|.sh)
+```
+
 # Repetitive tasks
 
 ## For loop
 
 ```bash
-for NAME [in LIST ]; do COMMANDS; done
+for NAME [ in LIST ]; do COMMANDS; done
 ```
 
 Odd characters
