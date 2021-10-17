@@ -25,6 +25,7 @@
 
 Big O establishes a worst-case run time
 
+
 Some common Big O run times
 Here are five Big O run times that you’ll encounter a lot, sorted from fastest to slowest:
 - **O(log n)**, also known as log time. Example: Binary search.

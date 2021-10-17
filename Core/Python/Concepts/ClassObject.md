@@ -12,13 +12,15 @@
 
 # Class and Object
 
-Python classes provide all the standard features of Object Oriented Programming: the class inheritance mechanism allows multiple base classes, a derived class can override any methods of its base class or classes, and a method can call the method of a base class with the same name. Objects can contain arbitrary amounts and kinds of data.
-
 ## Namespace
 
-A namespace is a mapping from names to objects. Most namespaces are currently implemented as Python dictionaries. Examples of namespaces are: the set of built-in names (containing functions such as `abs()`, and built-in exception names); the global names in a module; and the local names in a function invocation. In a sense the set of attributes of an object also form a namespace. The important thing to know about namespaces is that there is absolutely no relation between names in different namespaces; for instance, two different modules may both define a function maximize without confusion — users of the modules must prefix it with the module name.
-Namespaces are created at different moments and have different lifetimes. The namespace containing the built-in names is created when the Python interpreter starts up, and is never deleted. The global namespace for a module is created when the module definition is read in; normally, module namespaces also last until the interpreter quits. The statements executed by the top-level invocation of the interpreter, either read from a script file or interactively, are considered part of a module called `__main__`, so they have their own global namespace. (The built-in names actually also live in a module; this is called builtins.)
-The local namespace for a function is created when the function is called, and deleted when the function returns or raises an exception that is not handled within the function. 
+A namespace is a mapping from names to objects. Most namespaces are currently implemented as Python dictionaries. Examples of namespaces are: the set of built-in names (containing functions such as `abs()`, and built-in exception names); the global names in a module; and the local names in a function invocation. In a sense the set of attributes of an object also form a namespace. 
+
+Namespaces are created at different moments and have different lifetimes. 
+- The namespace containing the built-in names is created when the Python interpreter starts up, and is never deleted. 
+- The global namespace for a module is created when the module definition is read in; normally, module namespaces also last until the interpreter quits. 
+- The statements executed by the top-level invocation of the interpreter, either read from a script file or interactively, are considered part of a module called `__main__`, so they have their own global namespace. (The built-in names actually also live in a module; this is called builtins.)
+- The local namespace for a function is created when the function is called, and deleted when the function returns or raises an exception that is not handled within the function. 
 
 ## Scope
 
@@ -97,3 +99,4 @@ Each value is an object, and therefore has a class (also called its type). It is
 
 ### Name mangling
 Any identifier of the form __spam (at least two leading underscores, at most one trailing underscore) is textually replaced with _classname__spam, where classname is the current class name with leading underscore(s) stripped.
+
