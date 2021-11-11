@@ -1,3 +1,4 @@
+- [Python Crash Course](#python-crash-course)
 - [What is Python?](#what-is-python)
 - [pipenv](#pipenv)
 - [Class and Object](#class-and-object)
@@ -89,7 +90,12 @@
     - [heapq – List-Based Binary Heaps](#heapq--list-based-binary-heaps)
     - [queue.PriorityQueue – Beautiful Priority Queues](#queuepriorityqueue--beautiful-priority-queues)
 
-Python Crash Course
+
+# Python Crash Course
+
+Basically, this readme is the quick review of what I learned and read about Python. 
+TO make it concise and rich enough to include necessary information. 
+Following are the contents planned to be incuded.
 
 How could Python be used?
 
