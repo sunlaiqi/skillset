@@ -1,5 +1,6 @@
 
-
+- [Backend Refactor: add rest api to Django like-minded](#backend-refactor-add-rest-api-to-django-like-minded)
+- [HTTP 403 Forbidden when get /rest-auth/user](#http-403-forbidden-when-get-rest-authuser)
 
 # Backend Refactor: add rest api to Django like-minded 
 
